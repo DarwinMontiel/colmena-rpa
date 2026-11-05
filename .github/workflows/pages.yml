@@ -1,0 +1,38 @@
+# Publica el dashboard del monitor en GitHub Pages en "modo demo" (datos simulados en el navegador).
+name: Demo en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["src/rpa_orchestrator/monitor/static/**", "docs/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Armar sitio
+        run: |
+          mkdir -p site/static
+          cp src/rpa_orchestrator/monitor/static/index.html site/index.html
+          cp src/rpa_orchestrator/monitor/static/*.js src/rpa_orchestrator/monitor/static/*.css site/static/
+          cp -r docs/images site/images 2>/dev/null || true
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
