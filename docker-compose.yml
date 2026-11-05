@@ -1,0 +1,80 @@
+# Plataforma completa en local:  docker compose up --build -d
+#   Monitor:        http://localhost:8000
+#   RabbitMQ UI:    http://localhost:15672  (guest / guest)
+#   Portal demo:    http://localhost:8001
+# Encolar el lote de ejemplo:
+#   docker compose run --rm producer rpa-producer enqueue --file data/sample_tasks.csv
+
+x-app: &app
+  build: .
+  image: rpa-orchestrator:local
+  env_file: .env.example
+  environment:
+    RPA_DATABASE_URL: postgresql+psycopg://rpa:rpa@postgres:5432/rpa
+    RPA_AMQP_URL: amqp://guest:guest@rabbitmq:5672/%2F
+    RPA_PORTAL_URL: http://portal:8001
+  depends_on:
+    postgres: { condition: service_healthy }
+    rabbitmq: { condition: service_healthy }
+    migrate: { condition: service_completed_successfully }
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rpa
+      POSTGRES_PASSWORD: rpa
+      POSTGRES_DB: rpa
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rpa -d rpa"]
+      interval: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    ports: ["5672:5672", "15672:15672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      retries: 10
+
+  migrate:
+    build: .
+    image: rpa-orchestrator:local
+    environment:
+      RPA_DATABASE_URL: postgresql+psycopg://rpa:rpa@postgres:5432/rpa
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  portal:
+    build: .
+    image: rpa-orchestrator:local
+    command: ["uvicorn", "rpa_orchestrator.demo_portal.app:build", "--factory", "--host", "0.0.0.0", "--port", "8001"]
+    ports: ["8001:8001"]
+    environment:
+      PORTAL_FAILURE_RATE: "0.15"  # 15 % de respuestas 503 para ejercitar los reintentos
+
+  worker:
+    <<: *app
+    command: ["rpa-worker"]
+    deploy:
+      replicas: 2
+    volumes: [artifacts:/app/artifacts]
+
+  monitor:
+    <<: *app
+    command: ["rpa-monitor"]
+    ports: ["8000:8000"]
+
+  producer:
+    <<: *app
+    command: ["rpa-producer", "--help"]
+    profiles: ["tools"]
+
+volumes:
+  pgdata:
+  artifacts:
