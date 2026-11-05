@@ -24,7 +24,7 @@ jobs:
       - run: ruff format --check .
       - run: mypy src
       - run: pytest --cov --cov-report=term --cov-report=xml
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage.xml
