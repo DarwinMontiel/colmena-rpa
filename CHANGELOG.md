@@ -36,6 +36,9 @@ El proyecto pasa a llamarse **Colmena RPA** (antes `rpa-orchestrator`).
 - Si el broker fallaba durante un reproceso, la tarea quedaba con 0 intentos en la bitácora.
 - `.env.example` con listas JSON se rompía al pasar por `source` de bash y por `EnvironmentFile`
   de systemd; las listas aceptan ahora valores separados por comas.
+- En PostgreSQL con psycopg 3 + SQLAlchemy 2.1, `colmena-carga` tomaba cada fila nueva como
+  duplicada y no publicaba el lote (`rowcount` no confiable): ahora se usa `RETURNING`.
+- La imagen Docker no se construía con Playwright reciente (faltaba `libatomic1`).
 - El `HEALTHCHECK` de la imagen siempre devolvía éxito; se reemplazó por healthchecks reales.
 - La alerta de Prometheus usaba `increase()` sobre un *gauge*; ahora usa `delta()`.
 
