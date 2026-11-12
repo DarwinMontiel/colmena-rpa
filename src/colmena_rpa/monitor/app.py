@@ -192,11 +192,12 @@ def create_app(
             raise HTTPException(404, "tarea no encontrada")
         message: TaskMessage | None = tasks.requeue(task_id, pending_stale_after)
         if message is None:
-            minutes = settings.requeue_pending_after_seconds // 60
+            seconds = settings.requeue_pending_after_seconds
+            threshold = f"{seconds // 60} min" if seconds >= 60 else f"{seconds} s"
             raise HTTPException(
                 409,
                 "solo se pueden reprocesar tareas fallidas, o pendientes con más de "
-                f"{minutes} min sin movimiento (su mensaje podría seguir en la cola)",
+                f"{threshold} sin movimiento (su mensaje podría seguir en la cola)",
             )
         try:
             with make_publisher() as publisher:

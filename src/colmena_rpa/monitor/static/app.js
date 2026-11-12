@@ -164,11 +164,12 @@ async function openDetail(id) {
   dialog.showModal();
   try {
     const t = await api.task(id);
-    // La API decide: fallidas siempre; pendientes solo si llevan 15 min sin movimiento.
+    // La API decide: fallidas siempre; pendientes solo si llevan un tiempo sin movimiento
+    // (RPA_REQUEUE_PENDING_AFTER_SECONDS, 15 min por defecto).
     const canRequeue = Boolean(t.can_requeue);
     const requeueHint =
       t.status === "PENDING" && !canRequeue
-        ? `<p class="hint">Pendiente reciente: su mensaje sigue en la cola. Se podrá reprocesar si pasa 15 min sin movimiento.</p>`
+        ? `<p class="hint">Pendiente reciente: su mensaje sigue en la cola. Se podrá reprocesar cuando lleve un tiempo sin movimiento (15 min por defecto).</p>`
         : "";
     body.innerHTML = `
       ${agreementSummary(t)}

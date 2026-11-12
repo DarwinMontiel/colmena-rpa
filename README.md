@@ -63,8 +63,8 @@ de cartera simulado que trae el repositorio.
 
 Mientras tanto, el portal responde **503** en el 15 % de los intentos (falla inyectada a
 propósito). Esas tareas pasan a **Reintentando**, esperan 10 s, 60 s o 300 s en una cola con TTL
-y vuelven solas: ningún caso se pierde. Las dos fallidas quedan en el panel con su motivo y una
-captura de pantalla como evidencia, listas para que cartera corrija el dato de origen.
+y vuelven solas: ningún caso se pierde. Las dos fallidas quedan en el panel con su motivo (y la obrera
+guarda una captura de pantalla como evidencia), listas para que cartera corrija el dato de origen.
 
 Las fechas del CSV son **relativas** (`+7d`, `+15d`) y se resuelven el día de la carga, así que
 el lote funciona igual hoy que dentro de un año. Una prueba automática recorre el lote contra el
