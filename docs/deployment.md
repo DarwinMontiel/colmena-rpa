@@ -78,7 +78,8 @@ servicios:
      `/etc/systemd/system/rpa-*.service`.
    - Windows: `nssm stop rpa-worker-N` y `nssm remove rpa-worker-N confirm`.
 3. Si se usaba `RPA_PROCESSES=["..."]` en un `.env` de systemd, pasarlo al formato con comas
-   (`RPA_PROCESSES=payment_agreement`); el JSON sigue siendo válido si conserva las comillas.
+   (`RPA_PROCESSES=payment_agreement`). El JSON se sigue aceptando, incluso si perdió las
+   comillas por el camino (`[payment_agreement]`).
 
 Los comandos `rpa-worker`, `rpa-producer` y `rpa-monitor` siguen instalados como alias.
 

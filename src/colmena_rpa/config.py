@@ -57,7 +57,11 @@ class Settings(BaseSettings):
             return value
         text = value.strip()
         if text.startswith("["):
-            return json.loads(text)
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                # JSON que perdió las comillas al pasar por bash o systemd: ``[a,b]``.
+                text = text.strip("[]")
         return [item.strip().strip("\"'") for item in text.split(",") if item.strip()]
 
     @field_validator("retry_delays_seconds")

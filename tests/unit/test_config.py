@@ -19,6 +19,8 @@ ROOT = Path(__file__).parents[2]
         ("payment_agreement", "10,60,300", ["payment_agreement"], [10, 60, 300]),
         ("a, b", "5", ["a", "b"], [5]),
         ('["a","b"]', "[10,60]", ["a", "b"], [10, 60]),
+        # JSON v1 que perdió las comillas al pasar por ``source`` de bash o por systemd.
+        ("[a,b]", "[10, 60]", ["a", "b"], [10, 60]),
     ],
 )
 def test_lists_from_environment(
