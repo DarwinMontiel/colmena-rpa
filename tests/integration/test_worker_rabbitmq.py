@@ -96,7 +96,10 @@ def test_end_to_end_success_retry_and_dead_letter(it_settings: Settings, pg: Eng
         delays = tuple(it_settings.retry_delays_seconds)
         with open_publisher(it_settings.amqp_url, it_settings.exchange, delays) as publisher:
             for msg in (ok, flaky):
-                repo.register_pending(msg)
+                # Regresión: en PostgreSQL el rowcount del INSERT ... ON CONFLICT no es
+                # confiable; register_pending debe distinguir nueva vs. duplicada.
+                assert repo.register_pending(msg) is True
+                assert repo.register_pending(msg) is False
                 publisher.publish(msg)
             _wait_for(lambda: repo.get_status(flaky.task_id) is TaskStatus.DONE)
             repo.register_pending(bad)

@@ -84,6 +84,11 @@ def test_duplicate_delivery_of_finished_task_is_skipped(make_processor, message)
     assert len(bot.calls) == 1
 
 
+def test_register_pending_reports_new_and_duplicate(repo: TaskRepository, message) -> None:
+    assert repo.register_pending(message) is True
+    assert repo.register_pending(message) is False
+
+
 def test_claim_is_refused_for_finished_task(repo: TaskRepository, message) -> None:
     """``mark_running`` es atómico: no reabre una tarea que otra obrera ya terminó."""
     repo.register_pending(message)

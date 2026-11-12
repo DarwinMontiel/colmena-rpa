@@ -97,8 +97,11 @@ class TaskRepository:
                     updated_at=now,
                 )
                 .on_conflict_do_nothing(index_elements=["id"])
+                .returning(tasks.c.id)
             )
-            created = conn.execute(stmt).rowcount == 1
+            # RETURNING y no rowcount: con psycopg 3 + SQLAlchemy 2.1 el rowcount de un
+            # INSERT ... ON CONFLICT DO NOTHING no es confiable y toda fila parecía duplicada.
+            created = conn.execute(stmt).first() is not None
             if created:
                 self._event(conn, message.task_id, "ENQUEUED", 0, None, None)
             return created
