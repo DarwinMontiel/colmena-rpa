@@ -10,6 +10,9 @@ Detalles importantes:
 * El ``ack`` se envía **después** de persistir el estado y de publicar el reintento o la DLQ:
   semántica *at-least-once*. Los duplicados se neutralizan con la verificación de estado
   final en ``TaskProcessor`` y con la referencia idempotente que envía el bot.
+* Si el procesamiento falla por infraestructura (p. ej. PostgreSQL caído), el mensaje se
+  devuelve a la cola con ``basic_nack(requeue=True)`` tras una pausa: nunca queda sin
+  confirmar ni la obrera queda ocupada para siempre.
 * Playwright (API síncrona) exige usarse siempre desde el mismo hilo: el executor tiene un
   único hilo, que crea, usa y cierra los bots.
 """
@@ -40,6 +43,10 @@ log = get_logger(__name__)
 
 
 class Worker:
+    #: Espera antes de devolver a la cola un mensaje cuyo procesamiento falló por
+    #: infraestructura (base de datos, red). Evita reentregas en bucle.
+    crash_backoff_seconds: float = 5.0
+
     def __init__(
         self,
         settings: Settings,
@@ -133,7 +140,19 @@ class Worker:
             return
 
         self._heartbeat.busy(message.task_id)
-        outcome = self._processor.handle(message)
+        try:
+            outcome = self._processor.handle(message)
+        except Exception:
+            # Falla de infraestructura fuera del bot (p. ej. PostgreSQL caído al marcar la
+            # tarea). Sin este bloque la excepción quedaría guardada en el Future, el mensaje
+            # nunca recibiría ack/nack y, con prefetch=1, la obrera quedaría colgada en BUSY.
+            log.exception("worker.processing_crashed", task_id=str(message.task_id))
+            self._heartbeat.idle(None)
+            # Pausa breve para no entrar en un bucle caliente de reentregas mientras la
+            # dependencia se recupera; luego se devuelve el mensaje a la cola.
+            time.sleep(self.crash_backoff_seconds)
+            self._threadsafe(functools.partial(channel.basic_nack, delivery_tag, requeue=True))
+            return
         final = {OutcomeKind.ACK: True, OutcomeKind.DEAD: False}.get(outcome.kind)
         self._heartbeat.idle(final)
         self._threadsafe(functools.partial(self._settle, channel, delivery_tag, message, outcome))

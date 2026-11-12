@@ -64,6 +64,9 @@ WHERE task_id = '<uuid>' ORDER BY id;
   mensaje al cerrar la conexión (máx. ~2 latidos AMQP, 120 s).
 - Si persisten tras 15 min: verificar en la UI de RabbitMQ que la cola no tenga mensajes
   *unacked* de una conexión muerta y, si es necesario, cerrar esa conexión desde la UI.
+- Si la base de datos estuvo caída, en los logs aparece `worker.processing_crashed`: la obrera
+  devolvió el mensaje a la cola (`nack` con reencolado) tras 5 s y siguió libre. No requiere
+  acción; cuando PostgreSQL vuelve, la tarea se procesa normalmente.
 
 ## 6. Escalar la capacidad
 
