@@ -28,6 +28,9 @@ class Settings(BaseSettings):
 
     # Monitor
     offline_after_seconds: int = 60
+    # Una tarea PENDING solo se puede reprocesar si lleva este tiempo sin cambios (evita
+    # republicar un mensaje que todavía espera en la cola).
+    requeue_pending_after_seconds: int = 900
 
     # Bot de acuerdos de pago (portal demo incluido en el repositorio)
     portal_url: str = "http://localhost:8001"

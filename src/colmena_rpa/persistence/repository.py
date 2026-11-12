@@ -11,7 +11,13 @@ from uuid import UUID
 from sqlalchemy import Connection, Engine, func, insert, select, update
 from sqlalchemy.dialects import postgresql, sqlite
 
-from colmena_rpa.domain.models import TaskMessage, TaskStatus, WorkerState, utcnow
+from colmena_rpa.domain.models import (
+    TaskMessage,
+    TaskStatus,
+    WorkerState,
+    requeue_allowed,
+    utcnow,
+)
 from colmena_rpa.persistence.tables import bot_heartbeats, task_events, tasks
 
 Clock = Callable[[], datetime]
@@ -97,7 +103,13 @@ class TaskRepository:
                 self._event(conn, message.task_id, "ENQUEUED", 0, None, None)
             return created
 
-    def mark_running(self, message: TaskMessage, worker_id: str) -> None:
+    def mark_running(self, message: TaskMessage, worker_id: str) -> bool:
+        """Reclama la tarea para esta obrera.
+
+        El ``UPDATE`` es condicional (``status`` no final), así que la verificación y el cambio
+        de estado son atómicos: si otra obrera ya la terminó, devuelve ``False`` y el mensaje
+        se confirma como duplicado sin ejecutar el bot.
+        """
         now = self._clock()
         with self._engine.begin() as conn:
             exists = conn.execute(select(tasks.c.id).where(tasks.c.id == message.task_id)).first()
@@ -115,9 +127,12 @@ class TaskRepository:
                         updated_at=now,
                     )
                 )
-            conn.execute(
+            claimed = conn.execute(
                 update(tasks)
-                .where(tasks.c.id == message.task_id)
+                .where(
+                    tasks.c.id == message.task_id,
+                    tasks.c.status.not_in([TaskStatus.DONE, TaskStatus.FAILED]),
+                )
                 .values(
                     status=TaskStatus.RUNNING,
                     attempts=message.attempt,
@@ -126,8 +141,11 @@ class TaskRepository:
                     finished_at=None,
                     updated_at=now,
                 )
-            )
+            ).rowcount
+            if claimed != 1:
+                return False
             self._event(conn, message.task_id, "STARTED", message.attempt, None, worker_id)
+            return True
 
     def mark_retrying(self, task_id: UUID, attempt: int, error: str, delay_seconds: int) -> None:
         self._transition(
@@ -159,9 +177,11 @@ class TaskRepository:
             values={"last_error": error, "finished_at": self._clock()},
         )
 
-    def requeue(self, task_id: UUID) -> TaskMessage | None:
-        """Devuelve una tarea FAILED (o PENDING que nunca llegó al broker) a PENDING y
-        retorna el mensaje a republicar."""
+    def requeue(
+        self, task_id: UUID, pending_stale_after: timedelta = timedelta(minutes=15)
+    ) -> TaskMessage | None:
+        """Devuelve a PENDING una tarea FAILED (o PENDING estancada) y retorna el mensaje a
+        republicar. ``None`` si la regla de :func:`requeue_allowed` no lo permite."""
         now = self._clock()
         with self._engine.begin() as conn:
             row = (
@@ -169,13 +189,26 @@ class TaskRepository:
                 .mappings()
                 .first()
             )
-            if row is None or row["status"] not in (TaskStatus.FAILED, TaskStatus.PENDING):
+            if row is None or not requeue_allowed(
+                TaskStatus(row["status"]),
+                _aware(row["updated_at"]),  # type: ignore[arg-type]
+                now,
+                pending_stale_after,
+            ):
                 return None
-            conn.execute(
+            # Guarda optimista (útil en motores sin SELECT ... FOR UPDATE): si otro reproceso
+            # cambió la fila entre la lectura y la escritura, no se republica dos veces.
+            changed = conn.execute(
                 update(tasks)
-                .where(tasks.c.id == task_id)
+                .where(
+                    tasks.c.id == task_id,
+                    tasks.c.status == row["status"],
+                    tasks.c.updated_at == row["updated_at"],
+                )
                 .values(status=TaskStatus.PENDING, updated_at=now, finished_at=None)
-            )
+            ).rowcount
+            if changed != 1:
+                return None
             self._event(conn, task_id, "REQUEUED", row["attempts"], "reproceso manual", None)
             return TaskMessage(
                 task_id=row["id"],

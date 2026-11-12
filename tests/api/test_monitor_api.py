@@ -142,6 +142,72 @@ def test_requeue_done_task_is_rejected(client: TestClient, repo, publisher) -> N
     assert publisher.sent == []
 
 
+def test_requeue_unknown_task_is_404(client: TestClient, publisher) -> None:  # type: ignore[no-untyped-def]
+    assert client.post(f"/api/tasks/{uuid4()}/requeue").status_code == 404
+    assert publisher.sent == []
+
+
+def test_recent_pending_task_cannot_be_requeued(client: TestClient, repo, publisher) -> None:  # type: ignore[no-untyped-def]
+    """Su mensaje sigue en la cola: republicarlo crearía un duplicado."""
+    pending = _seed(repo)["pending"]
+
+    response = client.post(f"/api/tasks/{pending.task_id}/requeue")
+
+    assert response.status_code == 409
+    assert "pendientes con más de 15 min" in response.json()["detail"]
+    assert publisher.sent == []
+    assert client.get(f"/api/tasks/{pending.task_id}").json()["can_requeue"] is False
+
+
+def test_stale_pending_task_can_be_requeued_once(client: TestClient, engine, publisher) -> None:  # type: ignore[no-untyped-def]
+    old_repo = TaskRepository(engine, clock=lambda: utcnow() - timedelta(hours=1))
+    stale = TaskMessage(process="payment_agreement", payload={"documento": "7"})
+    old_repo.register_pending(stale)
+    assert client.get(f"/api/tasks/{stale.task_id}").json()["can_requeue"] is True
+
+    first = client.post(f"/api/tasks/{stale.task_id}/requeue")
+    second = client.post(f"/api/tasks/{stale.task_id}/requeue")  # doble clic
+
+    assert (first.status_code, second.status_code) == (200, 409)
+    assert [m.task_id for m in publisher.sent] == [stale.task_id]
+
+
+def test_failed_task_requeue_is_not_duplicated_by_double_click(
+    client: TestClient,
+    repo,  # type: ignore[no-untyped-def]
+    publisher,
+) -> None:
+    failed = _seed(repo)["failed"]
+    assert client.get(f"/api/tasks/{failed.task_id}").json()["can_requeue"] is True
+
+    assert client.post(f"/api/tasks/{failed.task_id}/requeue").status_code == 200
+    assert client.post(f"/api/tasks/{failed.task_id}/requeue").status_code == 409
+    assert len(publisher.sent) == 1
+
+
+def test_requeue_with_broker_down_keeps_attempt_count(settings: Settings, engine, repo) -> None:  # type: ignore[no-untyped-def]
+    @contextmanager
+    def broken() -> Iterator[FakePublisher]:
+        raise ConnectionError("rabbitmq caído")
+        yield FakePublisher()  # pragma: no cover
+
+    client = TestClient(create_app(settings, engine, publisher_factory=broken))
+    msg = TaskMessage(process="payment_agreement", payload={"documento": "9"})
+    repo.register_pending(msg)
+    for attempt in range(1, 5):
+        repo.mark_running(msg.model_copy(update={"attempt": attempt}), "w1")
+    repo.mark_failed(msg.task_id, 4, "TransientError: portal caído")
+
+    response = client.post(f"/api/tasks/{msg.task_id}/requeue")
+
+    assert response.status_code == 503
+    body = client.get(f"/api/tasks/{msg.task_id}").json()
+    assert body["status"] == "FAILED"
+    assert body["attempts"] == 4
+    assert body["events"][-1]["attempt"] == 4
+    assert "no se pudo republicar" in body["last_error"]
+
+
 def test_prometheus_metrics(client: TestClient, repo, heartbeats) -> None:  # type: ignore[no-untyped-def]
     _seed(repo)
     _beat(heartbeats, "w1", 1)

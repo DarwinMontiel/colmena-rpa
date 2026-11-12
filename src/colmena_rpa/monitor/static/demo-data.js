@@ -137,6 +137,9 @@ export function createDemoApi() {
   setInterval(tick, 5000);
 
   const clone = (x) => JSON.parse(JSON.stringify(x));
+  // Misma regla que la API real (domain.models.requeue_allowed).
+  const canRequeue = (t) =>
+    t.status === "FAILED" || (t.status === "PENDING" && now() - Date.parse(t.updated_at) >= 15 * 60e3);
   const publicBot = (b) => {
     const seconds = (now() - b.last_seen_ms) / 1000;
     return {
@@ -177,11 +180,13 @@ export function createDemoApi() {
     async task(id) {
       const t = tasks.find((x) => x.id === id);
       if (!t) throw new Error("tarea no encontrada");
-      return clone(t);
+      return { ...clone(t), can_requeue: canRequeue(t) };
     },
     async requeue(id) {
       const t = tasks.find((x) => x.id === id);
-      if (!t || !["FAILED", "PENDING"].includes(t.status)) throw new Error("solo FAILED o PENDING");
+      if (!t || !canRequeue(t)) {
+        throw new Error("solo fallidas, o pendientes con más de 15 min sin movimiento");
+      }
       t.status = "PENDING";
       t.finished_at = null;
       t.updated_at = iso(now());

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Annotated
 from uuid import UUID
@@ -19,7 +19,7 @@ from sqlalchemy import Engine, text
 
 from colmena_rpa import __version__
 from colmena_rpa.config import Settings
-from colmena_rpa.domain.models import TaskMessage, TaskStatus, utcnow
+from colmena_rpa.domain.models import TaskMessage, TaskStatus, requeue_allowed, utcnow
 from colmena_rpa.messaging.publisher import Publisher, open_publisher
 from colmena_rpa.monitor.schemas import (
     BotOut,
@@ -112,6 +112,7 @@ def create_app(
     tasks = TaskRepository(engine)
     heartbeats = HeartbeatRepository(engine)
     delays = tuple(settings.retry_delays_seconds)
+    pending_stale_after = timedelta(seconds=settings.requeue_pending_after_seconds)
     make_publisher: PublisherFactory = publisher_factory or (
         lambda: open_publisher(settings.amqp_url, settings.exchange, delays)
     )
@@ -179,18 +180,30 @@ def create_app(
             payload=record.payload,
             output=record.output,
             events=[EventOut(**e) for e in record.events],
+            can_requeue=requeue_allowed(
+                record.status, record.updated_at, utcnow(), pending_stale_after
+            ),
         )
 
     @app.post("/api/tasks/{task_id}/requeue", response_model=RequeueOut, tags=["tasks"])
     def requeue(task_id: UUID) -> RequeueOut:
-        message: TaskMessage | None = tasks.requeue(task_id)
+        before = tasks.get(task_id, with_events=False)
+        if before is None:
+            raise HTTPException(404, "tarea no encontrada")
+        message: TaskMessage | None = tasks.requeue(task_id, pending_stale_after)
         if message is None:
-            raise HTTPException(409, "solo se pueden reprocesar tareas FAILED o PENDING")
+            minutes = settings.requeue_pending_after_seconds // 60
+            raise HTTPException(
+                409,
+                "solo se pueden reprocesar tareas fallidas, o pendientes con más de "
+                f"{minutes} min sin movimiento (su mensaje podría seguir en la cola)",
+            )
         try:
             with make_publisher() as publisher:
                 publisher.publish(message)
         except Exception as exc:
-            tasks.mark_failed(task_id, 0, f"no se pudo republicar: {exc}")
+            # Se conserva el número real de intentos: la bitácora no debe mostrar 0.
+            tasks.mark_failed(task_id, before.attempts, f"no se pudo republicar: {exc}")
             raise HTTPException(503, "broker no disponible") from exc
         return RequeueOut(task_id=task_id, status=TaskStatus.PENDING)
 

@@ -115,7 +115,7 @@ def test_successful_outcome_is_acked(settings: Settings) -> None:
     assert heartbeat.events[-1] == ("idle", True)
 
 
-@pytest.mark.parametrize("failing", ["get_status", "mark_running"])
+@pytest.mark.parametrize("failing", ["mark_running", "mark_done"])
 def test_repository_failure_propagates_from_processor(
     make_processor: Any, repo: TaskRepository, message: TaskMessage, failing: str
 ) -> None:

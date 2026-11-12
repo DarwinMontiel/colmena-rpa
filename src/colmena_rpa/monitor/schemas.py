@@ -64,6 +64,7 @@ class TaskDetailOut(TaskOut):
     payload: dict[str, Any]
     output: dict[str, Any] | None
     events: list[EventOut]
+    can_requeue: bool = False
 
 
 class RequeueOut(BaseModel):

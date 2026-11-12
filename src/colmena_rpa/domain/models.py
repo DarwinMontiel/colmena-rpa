@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
@@ -24,6 +24,22 @@ class TaskStatus(StrEnum):
     @property
     def is_final(self) -> bool:
         return self in {TaskStatus.DONE, TaskStatus.FAILED}
+
+
+def requeue_allowed(
+    status: TaskStatus, updated_at: datetime, now: datetime, pending_stale_after: timedelta
+) -> bool:
+    """Regla de reproceso manual.
+
+    * ``FAILED``: siempre (el mensaje ya salió de la cola principal).
+    * ``PENDING``: solo si lleva más de ``pending_stale_after`` sin cambios. Una tarea PENDING
+      reciente casi seguro tiene su mensaje esperando en la cola; republicarla crearía un
+      duplicado que dos obreras podrían ejecutar en paralelo.
+    * ``RUNNING``, ``RETRYING`` y ``DONE``: nunca.
+    """
+    if status is TaskStatus.FAILED:
+        return True
+    return status is TaskStatus.PENDING and now - updated_at >= pending_stale_after
 
 
 class WorkerState(StrEnum):

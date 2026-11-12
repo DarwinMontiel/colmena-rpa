@@ -133,6 +133,7 @@ stateDiagram-v2
     RETRYING --> RUNNING: vence el TTL de la cola de espera
     RUNNING --> FAILED: BusinessRuleError o intentos agotados
     FAILED --> PENDING: reproceso manual (monitor)
+    PENDING --> PENDING: reproceso si lleva más de 15 min estancada
     DONE --> [*]
 ```
 
@@ -190,7 +191,10 @@ la migración produce exactamente el esquema declarado en código.
 | El portal responde 503 o hay timeout | Se reintenta en 10 s, 60 s y 300 s | Colas de espera con TTL ([ADR-0002](adr/0002-reintentos-con-colas-ttl.md)) |
 | Dato inválido / cliente inexistente | No se reintenta; queda `FAILED` y en la DLQ con el error | Clasificación de errores ([ADR-0004](adr/0004-clasificacion-de-errores-rpa.md)) |
 | El worker muere a mitad de una tarea | RabbitMQ reentrega el mensaje a otro worker | `ack` manual después de persistir |
-| Se reentrega una tarea ya terminada | Se confirma sin ejecutar el bot | Verificación de estado final |
+| Se reentrega una tarea ya terminada | Se confirma sin ejecutar el bot | Reclamo atómico: `UPDATE … WHERE status NOT IN ('DONE','FAILED')` |
+| Operación pulsa *Reprocesar* sobre una tarea pendiente reciente | Se rechaza (409): su mensaje aún está en la cola | Solo fallidas o pendientes con más de 15 min sin movimiento (`RPA_REQUEUE_PENDING_AFTER_SECONDS`) |
+| Doble clic en *Reprocesar* | Se publica una sola vez | Guarda optimista sobre `status` + `updated_at` |
+| PostgreSQL cae mientras una obrera procesa | El mensaje vuelve a la cola (`nack`) y la obrera queda libre | Captura de fallas de infraestructura en `worker/runtime.py` |
 | El bot repite un registro en el portal | El portal devuelve la misma confirmación | Referencia idempotente = `task_id` ([ADR-0003](adr/0003-idempotencia-y-at-least-once.md)) |
 | Se carga dos veces el mismo archivo | Las filas repetidas se omiten | `task_id` determinístico (hash del contenido) |
 | RabbitMQ no está disponible | El worker reintenta conectar con backoff exponencial (máx. 30 s) | Bucle de reconexión |

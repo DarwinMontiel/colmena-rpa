@@ -61,12 +61,12 @@ class TaskProcessor:
             task_id=str(message.task_id), process=message.process, attempt=message.attempt
         )
 
-        status = self._repo.get_status(message.task_id)
-        if status is not None and status.is_final:
-            bound.info("task.duplicate_skipped", status=status)
+        # Reclamo atómico: si la tarea ya está DONE/FAILED (reentrega de RabbitMQ o mensaje
+        # duplicado), se confirma sin ejecutar el bot.
+        if not self._repo.mark_running(message, self._worker_id):
+            bound.info("task.duplicate_skipped")
             return Outcome(OutcomeKind.ACK)
 
-        self._repo.mark_running(message, self._worker_id)
         ctx = BotContext(
             task_id=message.task_id,
             attempt=message.attempt,

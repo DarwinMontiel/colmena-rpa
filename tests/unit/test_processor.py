@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from colmena_rpa.domain.models import TaskMessage, TaskStatus
+from datetime import timedelta
+
+import pytest
+
+from colmena_rpa.domain.models import TaskMessage, TaskStatus, requeue_allowed, utcnow
 from colmena_rpa.persistence import TaskRepository
 from colmena_rpa.worker.processor import OutcomeKind
 from tests.conftest import ScriptedBot
@@ -78,6 +82,38 @@ def test_duplicate_delivery_of_finished_task_is_skipped(make_processor, message)
 
     assert outcome.kind is OutcomeKind.ACK
     assert len(bot.calls) == 1
+
+
+def test_claim_is_refused_for_finished_task(repo: TaskRepository, message) -> None:
+    """``mark_running`` es atómico: no reabre una tarea que otra obrera ya terminó."""
+    repo.register_pending(message)
+    assert repo.mark_running(message, "w1") is True
+    repo.mark_done(message.task_id, 1, {"confirmation": "AC-1"})
+
+    assert repo.mark_running(message.next_attempt(), "w2") is False
+
+    record = repo.get(message.task_id)
+    assert record is not None
+    assert record.status is TaskStatus.DONE
+    assert record.worker_id == "w1"
+    assert [e["event"] for e in record.events].count("STARTED") == 1
+
+
+@pytest.mark.parametrize(
+    ("status", "age_minutes", "allowed"),
+    [
+        (TaskStatus.FAILED, 0, True),
+        (TaskStatus.PENDING, 1, False),
+        (TaskStatus.PENDING, 15, True),
+        (TaskStatus.RUNNING, 60, False),
+        (TaskStatus.RETRYING, 60, False),
+        (TaskStatus.DONE, 60, False),
+    ],
+)
+def test_requeue_rule(status: TaskStatus, age_minutes: int, allowed: bool) -> None:
+    now = utcnow()
+    updated = now - timedelta(minutes=age_minutes)
+    assert requeue_allowed(status, updated, now, timedelta(minutes=15)) is allowed
 
 
 def test_unknown_process_goes_to_dead_letter(make_processor, repo):

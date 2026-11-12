@@ -43,6 +43,9 @@ WHERE task_id = '<uuid>' ORDER BY id;
      listado; no reprocesar hasta corregir el dato de origen.
    - **Intentos agotados por falla del portal**: confirmar que el portal ya responde y usar
      **Reprocesar tarea** en el dashboard (o `POST /api/tasks/{id}/requeue`).
+   - El botón solo aparece en tareas **fallidas** o **pendientes con más de 15 min sin
+     movimiento** (configurable con `RPA_REQUEUE_PENDING_AFTER_SECONDS`). Una pendiente reciente
+     todavía tiene su mensaje en la cola: reprocesarla crearía un duplicado.
 3. Los mensajes de la DLQ se pueden purgar desde la UI de RabbitMQ una vez reprocesados: el
    estado de verdad está en PostgreSQL.
 

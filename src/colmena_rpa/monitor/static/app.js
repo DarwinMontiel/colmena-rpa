@@ -122,7 +122,8 @@ async function openDetail(id) {
   dialog.showModal();
   try {
     const t = await api.task(id);
-    const canRequeue = t.status === "FAILED" || t.status === "PENDING";
+    // La API decide: fallidas siempre; pendientes solo si llevan 15 min sin movimiento.
+    const canRequeue = Boolean(t.can_requeue);
     body.innerHTML = `
       <div class="grid2">
         <div class="field"><small>ID</small><span class="mono">${esc(t.id)}</span></div>
