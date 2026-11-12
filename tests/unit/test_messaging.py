@@ -6,10 +6,10 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from rpa_orchestrator.domain.models import TaskMessage
-from rpa_orchestrator.messaging.publisher import TaskPublisher
-from rpa_orchestrator.messaging.retry import RetryPolicy
-from rpa_orchestrator.messaging.topology import ProcessTopology
+from colmena_rpa.domain.models import TaskMessage
+from colmena_rpa.messaging.publisher import TaskPublisher
+from colmena_rpa.messaging.retry import RetryPolicy
+from colmena_rpa.messaging.topology import ProcessTopology
 
 
 class FakeChannel:

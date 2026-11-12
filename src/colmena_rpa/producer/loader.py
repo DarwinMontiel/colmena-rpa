@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
-from rpa_orchestrator.domain.models import TaskMessage
+from colmena_rpa.domain.models import TaskMessage
 
 
 def _coerce(value: str) -> Any:

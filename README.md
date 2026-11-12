@@ -5,8 +5,8 @@
 **Plataforma para operar bots RPA a escala: tareas distribuidas por RabbitMQ, trazabilidad en
 PostgreSQL y monitoreo centralizado de bots en servidores Windows y Linux.**
 
-[![CI](https://github.com/DarwinMontiel/rpa-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinMontiel/rpa-orchestrator/actions/workflows/ci.yml)
-[![Demo](https://img.shields.io/badge/demo-GitHub%20Pages-0d9488)](https://darwinmontiel.github.io/rpa-orchestrator/)
+[![CI](https://github.com/DarwinMontiel/colmena-rpa/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinMontiel/colmena-rpa/actions/workflows/ci.yml)
+[![Demo](https://img.shields.io/badge/demo-GitHub%20Pages-0d9488)](https://darwinmontiel.github.io/colmena-rpa/)
 ![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-3776AB?logo=python&logoColor=white)
 ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-quorum%20%2B%20DLQ-FF6600?logo=rabbitmq&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
@@ -15,7 +15,7 @@ PostgreSQL y monitoreo centralizado de bots en servidores Windows y Linux.**
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-[**Ver demo en vivo**](https://darwinmontiel.github.io/rpa-orchestrator/) ·
+[**Ver demo en vivo**](https://darwinmontiel.github.io/colmena-rpa/) ·
 [Arquitectura](docs/architecture.md) ·
 [Decisiones (ADR)](docs/adr/) ·
 [Runbook](docs/runbook.md) ·
@@ -66,7 +66,7 @@ Este proyecto responde esas preguntas con una arquitectura orientada a mensajes.
 
 ```mermaid
 flowchart LR
-    CSV[(Lote CSV)] --> P[rpa-producer]
+    CSV[(Lote CSV)] --> P[colmena-carga]
     P -- registra PENDING --> DB[(PostgreSQL)]
     P -- publica --> EX{{rpa.tasks}}
     EX --> Q[[rpa.payment_agreement]]
@@ -77,7 +77,7 @@ flowchart LR
     RQ -- TTL vencido --> EX
     W1 & W2 -- error de negocio --> DLQ[[DLQ]]
     W1 & W2 -- estado, eventos, latidos --> DB
-    M[rpa-monitor · FastAPI] --> DB
+    M[colmena-monitor · FastAPI] --> DB
     M -- reprocesar --> EX
     OPS((Operación)) --> M
     PROM[Prometheus] -- /metrics --> M
@@ -105,10 +105,10 @@ stateDiagram-v2
 ### Con Docker (plataforma completa)
 
 ```bash
-git clone https://github.com/DarwinMontiel/rpa-orchestrator.git
-cd rpa-orchestrator
+git clone https://github.com/DarwinMontiel/colmena-rpa.git
+cd colmena-rpa
 docker compose up --build -d                       # postgres, rabbitmq, migraciones, portal, 2 workers, monitor
-docker compose run --rm producer rpa-producer enqueue --file data/sample_tasks.csv
+docker compose run --rm carga colmena-carga encolar --archivo data/sample_tasks.csv
 ```
 
 - Monitor: <http://localhost:8000> · API: <http://localhost:8000/docs>
@@ -125,7 +125,7 @@ python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\act
 make install        # dependencias + Chromium + pre-commit
 make infra          # solo PostgreSQL y RabbitMQ en Docker
 make migrate
-rpa-worker          # en otra terminal: rpa-monitor
+colmena-obrera          # en otra terminal: colmena-monitor
 ```
 
 ## Pruebas
@@ -157,7 +157,7 @@ Todo se configura por variables de entorno con prefijo `RPA_` (ver [.env.example
 ## Estructura
 
 ```
-src/rpa_orchestrator/
+src/colmena_rpa/
 ├── domain/          # modelos y errores (sin dependencias de infraestructura)
 ├── messaging/       # topología RabbitMQ, publicación con confirms, política de reintentos
 ├── persistence/     # SQLAlchemy Core, repositorios, esquema

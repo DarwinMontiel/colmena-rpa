@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1.7
-# Imagen única para worker, monitor, productor y portal demo (cambia solo el comando).
+# Imagen única de Colmena RPA para obrera, monitor, carga de lotes y portal demo
+# (cambia solo el comando). Los healthchecks se definen por servicio en docker-compose.yml.
 
 FROM python:3.12-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -15,16 +16,18 @@ COPY src ./src
 RUN pip wheel --wheel-dir /wheels .
 
 FROM base AS runtime
+LABEL org.opencontainers.image.title="colmena-rpa" \
+      org.opencontainers.image.description="Bots RPA distribuidos con RabbitMQ y trazabilidad en PostgreSQL" \
+      org.opencontainers.image.source="https://github.com/DarwinMontiel/colmena-rpa" \
+      org.opencontainers.image.licenses="MIT"
 COPY --from=build /wheels /wheels
 RUN pip install /wheels/*.whl && rm -rf /wheels \
     && playwright install --with-deps chromium \
-    && useradd --create-home --uid 10001 rpa \
-    && mkdir -p /app/artifacts && chown rpa:rpa /app/artifacts
+    && useradd --create-home --uid 10001 colmena \
+    && mkdir -p /app/artifacts && chown colmena:colmena /app/artifacts
 COPY alembic.ini ./
 COPY alembic ./alembic
 COPY data ./data
-USER rpa
+USER colmena
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD python -c "import sys,urllib.request; sys.exit(0)" || exit 1
-CMD ["rpa-worker"]
+CMD ["colmena-obrera"]

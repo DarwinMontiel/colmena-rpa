@@ -1,7 +1,7 @@
 """Modelo de dominio: sin dependencias de infraestructura."""
 
-from rpa_orchestrator.domain.errors import BotError, BusinessRuleError, TransientError
-from rpa_orchestrator.domain.models import TaskMessage, TaskStatus, WorkerState
+from colmena_rpa.domain.errors import BotError, BusinessRuleError, TransientError
+from colmena_rpa.domain.models import TaskMessage, TaskStatus, WorkerState
 
 __all__ = [
     "BotError",

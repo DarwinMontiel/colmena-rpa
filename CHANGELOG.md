@@ -19,4 +19,4 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 - Portal de cartera simulado con inyección de fallas para demos y pruebas E2E.
 - Docker Compose, unidades systemd, script de servicios Windows (NSSM) y CI en GitHub Actions.
 
-[1.0.0]: https://github.com/DarwinMontiel/rpa-orchestrator/releases/tag/v1.0.0
+[1.0.0]: https://github.com/DarwinMontiel/colmena-rpa/releases/tag/v1.0.0

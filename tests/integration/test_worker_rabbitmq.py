@@ -15,17 +15,17 @@ import pika
 import pytest
 from sqlalchemy import Engine, text
 
-from rpa_orchestrator.bots.registry import BotRegistry
-from rpa_orchestrator.config import Settings
-from rpa_orchestrator.domain.models import TaskMessage, TaskStatus
-from rpa_orchestrator.messaging.publisher import open_publisher
-from rpa_orchestrator.messaging.retry import RetryPolicy
-from rpa_orchestrator.messaging.topology import ProcessTopology
-from rpa_orchestrator.persistence import HeartbeatRepository, TaskRepository, create_db_engine
-from rpa_orchestrator.persistence.tables import metadata
-from rpa_orchestrator.worker.heartbeat import HeartbeatService
-from rpa_orchestrator.worker.processor import TaskProcessor
-from rpa_orchestrator.worker.runtime import Worker
+from colmena_rpa.bots.registry import BotRegistry
+from colmena_rpa.config import Settings
+from colmena_rpa.domain.models import TaskMessage, TaskStatus
+from colmena_rpa.messaging.publisher import open_publisher
+from colmena_rpa.messaging.retry import RetryPolicy
+from colmena_rpa.messaging.topology import ProcessTopology
+from colmena_rpa.persistence import HeartbeatRepository, TaskRepository, create_db_engine
+from colmena_rpa.persistence.tables import metadata
+from colmena_rpa.worker.heartbeat import HeartbeatService
+from colmena_rpa.worker.processor import TaskProcessor
+from colmena_rpa.worker.runtime import Worker
 from tests.conftest import ScriptedBot
 
 pytestmark = pytest.mark.integration

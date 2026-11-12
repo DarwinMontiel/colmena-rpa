@@ -3,8 +3,8 @@ from __future__ import annotations
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from rpa_orchestrator.config import get_settings
-from rpa_orchestrator.persistence.tables import metadata
+from colmena_rpa.config import get_settings
+from colmena_rpa.persistence.tables import metadata
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().database_url)

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from rpa_orchestrator.domain.models import TaskMessage, TaskStatus
-from rpa_orchestrator.persistence import TaskRepository
-from rpa_orchestrator.worker.processor import OutcomeKind
+from colmena_rpa.domain.models import TaskMessage, TaskStatus
+from colmena_rpa.persistence import TaskRepository
+from colmena_rpa.worker.processor import OutcomeKind
 from tests.conftest import ScriptedBot
 
 
@@ -94,9 +94,9 @@ def test_message_without_prior_registration_is_created(make_processor, repo, mes
 
 
 def test_bot_is_recreated_after_system_error(repo, message):
-    from rpa_orchestrator.bots.registry import BotRegistry
-    from rpa_orchestrator.messaging.retry import RetryPolicy
-    from rpa_orchestrator.worker.processor import TaskProcessor
+    from colmena_rpa.bots.registry import BotRegistry
+    from colmena_rpa.messaging.retry import RetryPolicy
+    from colmena_rpa.worker.processor import TaskProcessor
 
     created: list[ScriptedBot] = []
 

@@ -16,10 +16,10 @@ from uuid import uuid4
 import pytest
 import uvicorn
 
-from rpa_orchestrator.bots.base import BotContext
-from rpa_orchestrator.config import Settings
-from rpa_orchestrator.demo_portal.app import create_portal
-from rpa_orchestrator.domain.errors import BusinessRuleError
+from colmena_rpa.bots.base import BotContext
+from colmena_rpa.config import Settings
+from colmena_rpa.demo_portal.app import create_portal
+from colmena_rpa.domain.errors import BusinessRuleError
 
 pytestmark = pytest.mark.e2e
 
@@ -49,7 +49,7 @@ def portal_url() -> Iterator[str]:
 
 @pytest.fixture(scope="module")
 def bot(portal_url: str, tmp_path_factory: pytest.TempPathFactory):  # type: ignore[no-untyped-def]
-    from rpa_orchestrator.bots.payment_agreement import PaymentAgreementBot
+    from colmena_rpa.bots.payment_agreement import PaymentAgreementBot
 
     settings = Settings(
         portal_url=portal_url,

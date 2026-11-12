@@ -21,7 +21,7 @@ consultable. La plataforma resuelve tres problemas:
 ```mermaid
 flowchart LR
     subgraph Entrada
-        CSV[(CSV / lote)] --> P[rpa-producer]
+        CSV[(CSV / lote)] --> P[colmena-carga]
     end
 
     subgraph RabbitMQ
@@ -38,9 +38,9 @@ flowchart LR
     end
 
     subgraph Workers["Workers (Linux / Windows Server)"]
-        W1[rpa-worker #1]
-        W2[rpa-worker #2]
-        WN[rpa-worker #N]
+        W1[colmena-obrera #1]
+        W2[colmena-obrera #2]
+        WN[colmena-obrera #N]
     end
 
     P -- 1 · registra PENDING --> DB[(PostgreSQL)]
@@ -50,7 +50,7 @@ flowchart LR
     W1 -- error de negocio / sin intentos --> DLX
     W1 -- Playwright --> PORTAL[Portal web de cartera]
     W1 & W2 & WN -- estado + eventos + latidos --> DB
-    M[rpa-monitor<br/>FastAPI] -- lee --> DB
+    M[colmena-monitor<br/>FastAPI] -- lee --> DB
     M -- reprocesar --> EX
     U((Operación)) --> M
     PROM[Prometheus / Grafana] -- /metrics --> M
@@ -58,11 +58,11 @@ flowchart LR
 
 | Componente | Responsabilidad | Escala |
 |---|---|---|
-| `rpa-producer` | Lee archivos de entrada, asigna `task_id` determinístico, registra y publica. | Bajo demanda (CLI / tarea programada). |
+| `colmena-carga` | Lee archivos de entrada, asigna `task_id` determinístico, registra y publica. | Bajo demanda (CLI / tarea programada). |
 | RabbitMQ | Desacopla productores de bots; reparte carga; retiene mensajes ante caídas. | Cluster de 3 nodos con colas quorum en producción. |
-| `rpa-worker` | Consume, ejecuta el bot, decide el desenlace y confirma el mensaje. | Horizontal: más instancias = más throughput. |
+| `colmena-obrera` | Consume, ejecuta el bot, decide el desenlace y confirma el mensaje. | Horizontal: más instancias = más throughput. |
 | PostgreSQL | Fuente de verdad del estado de tareas, bitácora de auditoría y latidos. | Vertical + réplicas de lectura para el monitor. |
-| `rpa-monitor` | API REST, dashboard web, métricas Prometheus y reproceso manual. | Sin estado: varias instancias tras un balanceador. |
+| `colmena-monitor` | API REST, dashboard web, métricas Prometheus y reproceso manual. | Sin estado: varias instancias tras un balanceador. |
 | Portal demo | Simula el aplicativo legado que el bot opera (incluye fallas 503 configurables). | Solo para desarrollo y demos. |
 
 ## 3. Diseño interno del worker

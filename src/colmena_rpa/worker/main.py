@@ -1,21 +1,21 @@
-"""Punto de entrada: ``rpa-worker``."""
+"""Punto de entrada: ``colmena-obrera``."""
 
 from __future__ import annotations
 
-from rpa_orchestrator.bots.catalog import build_registry
-from rpa_orchestrator.config import get_settings
-from rpa_orchestrator.logging import configure_logging, get_logger
-from rpa_orchestrator.messaging.retry import RetryPolicy
-from rpa_orchestrator.persistence import HeartbeatRepository, TaskRepository, create_db_engine
-from rpa_orchestrator.worker.heartbeat import HeartbeatService
-from rpa_orchestrator.worker.processor import TaskProcessor
-from rpa_orchestrator.worker.runtime import Worker
+from colmena_rpa.bots.catalog import build_registry
+from colmena_rpa.config import get_settings
+from colmena_rpa.logging import configure_logging, get_logger
+from colmena_rpa.messaging.retry import RetryPolicy
+from colmena_rpa.persistence import HeartbeatRepository, TaskRepository, create_db_engine
+from colmena_rpa.worker.heartbeat import HeartbeatService
+from colmena_rpa.worker.processor import TaskProcessor
+from colmena_rpa.worker.runtime import Worker
 
 
 def main() -> None:
     settings = get_settings()
     configure_logging(settings.log_level, settings.log_json)
-    log = get_logger("rpa_orchestrator.worker")
+    log = get_logger("colmena_rpa.worker")
 
     engine = create_db_engine(settings.database_url)
     registry = build_registry(settings)

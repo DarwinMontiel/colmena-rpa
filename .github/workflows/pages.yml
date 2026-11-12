@@ -4,7 +4,7 @@ name: Demo en GitHub Pages
 on:
   push:
     branches: [main]
-    paths: ["src/rpa_orchestrator/monitor/static/**", "docs/**", ".github/workflows/pages.yml"]
+    paths: ["src/colmena_rpa/monitor/static/**", "docs/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -27,8 +27,8 @@ jobs:
       - name: Armar sitio
         run: |
           mkdir -p site/static
-          cp src/rpa_orchestrator/monitor/static/index.html site/index.html
-          cp src/rpa_orchestrator/monitor/static/*.js src/rpa_orchestrator/monitor/static/*.css site/static/
+          cp src/colmena_rpa/monitor/static/index.html site/index.html
+          cp src/colmena_rpa/monitor/static/*.js src/colmena_rpa/monitor/static/*.css site/static/
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

@@ -6,7 +6,7 @@ Tres formas de desplegar, de la más simple a la más cercana a un entorno corpo
 
 ```bash
 docker compose up --build -d
-docker compose run --rm producer rpa-producer enqueue --file data/sample_tasks.csv
+docker compose run --rm carga colmena-carga encolar --archivo data/sample_tasks.csv
 ```
 
 | Servicio | URL |
@@ -20,17 +20,17 @@ El servicio `migrate` aplica las migraciones de Alembic antes de iniciar worker 
 ## 2. Servidores Linux (systemd)
 
 ```bash
-sudo ./deploy/linux/install.sh v1.0.0
+sudo ./deploy/linux/install.sh v2.0.0
 ```
 
 El script:
 
-1. Crea el usuario de sistema `rpa` y clona/actualiza el repositorio en `/opt/rpa-orchestrator`
+1. Crea el usuario de sistema `rpa` y clona/actualiza el repositorio en `/opt/colmena-rpa`
    en el *tag* indicado.
 2. Crea el entorno virtual, instala el paquete y Chromium para Playwright.
-3. Crea `/etc/rpa-orchestrator/{worker,monitor}.env` a partir de `.env.example` (permisos 640).
+3. Crea `/etc/colmena-rpa/{worker,monitor}.env` a partir de `.env.example` (permisos 640).
 4. Aplica migraciones (`alembic upgrade head`).
-5. Instala `rpa-monitor.service` y la plantilla `rpa-worker@.service`, y reinicia los workers
+5. Instala `colmena-monitor.service` y la plantilla `colmena-obrera@.service`, y reinicia los workers
    **de forma escalonada** para no detener toda la capacidad a la vez.
 
 Parada ordenada: systemd envía `SIGTERM`; el worker deja de consumir, termina la tarea en curso,
@@ -41,7 +41,7 @@ Publicar el monitor detrás de Nginx con TLS:
 ```nginx
 server {
     listen 443 ssl;
-    server_name rpa-monitor.empresa.local;
+    server_name colmena-monitor.empresa.local;
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -56,11 +56,11 @@ Requisitos: Python 3.12, Git y [NSSM](https://nssm.cc) en el `PATH`. En PowerShe
 administrador:
 
 ```powershell
-.\deploy\windows\install-service.ps1 -Version v1.0.0 -Instances 2
+.\deploy\windows\install-service.ps1 -Version v2.0.0 -Instances 2
 ```
 
-Crea los servicios `rpa-worker-1..N` con inicio automático, logs rotados en
-`C:\rpa-orchestrator\logs` y parada por `Ctrl+C` (el worker atiende `SIGINT`/`SIGBREAK` y termina
+Crea los servicios `colmena-obrera-1..N` con inicio automático, logs rotados en
+`C:\colmena-rpa\logs` y parada por `Ctrl+C` (el worker atiende `SIGINT`/`SIGBREAK` y termina
 la tarea en curso).
 
 ## Proceso de release
@@ -73,7 +73,7 @@ la tarea en curso).
 
 ## Rollback
 
-- Ejecutar el script de despliegue con el tag anterior (`install.sh v1.0.0`).
+- Ejecutar el script de despliegue con el tag anterior (`install.sh v2.0.0`).
 - Las migraciones se escriben compatibles hacia atrás (agregar columnas nulas, no renombrar en
   caliente), de modo que la versión anterior funciona con el esquema nuevo. Si una migración no
   lo es, el release lo indica y se ejecuta `alembic downgrade -1` antes del rollback.

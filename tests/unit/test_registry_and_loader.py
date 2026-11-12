@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from rpa_orchestrator.bots.registry import BotRegistry
-from rpa_orchestrator.domain.errors import UnknownProcessError
-from rpa_orchestrator.producer.loader import deterministic_task_id, read_tasks
+from colmena_rpa.bots.registry import BotRegistry
+from colmena_rpa.domain.errors import UnknownProcessError
+from colmena_rpa.producer.loader import deterministic_task_id, read_tasks
 from tests.conftest import ScriptedBot
 
 

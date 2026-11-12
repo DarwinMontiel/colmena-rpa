@@ -1,4 +1,4 @@
-"""Punto de entrada: ``rpa-monitor`` (uvicorn)."""
+"""Punto de entrada: ``colmena-monitor`` (uvicorn)."""
 
 from __future__ import annotations
 
@@ -7,10 +7,10 @@ import os
 import uvicorn
 from fastapi import FastAPI
 
-from rpa_orchestrator.config import get_settings
-from rpa_orchestrator.logging import configure_logging
-from rpa_orchestrator.monitor.app import create_app
-from rpa_orchestrator.persistence import create_db_engine
+from colmena_rpa.config import get_settings
+from colmena_rpa.logging import configure_logging
+from colmena_rpa.monitor.app import create_app
+from colmena_rpa.persistence import create_db_engine
 
 
 def build() -> FastAPI:
@@ -21,7 +21,7 @@ def build() -> FastAPI:
 
 def main() -> None:
     uvicorn.run(
-        "rpa_orchestrator.monitor.main:build",
+        "colmena_rpa.monitor.main:build",
         factory=True,
         host=os.getenv("RPA_MONITOR_HOST", "0.0.0.0"),  # noqa: S104 - se publica tras proxy/contenedor
         port=int(os.getenv("RPA_MONITOR_PORT", "8000")),

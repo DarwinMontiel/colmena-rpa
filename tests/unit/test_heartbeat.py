@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from rpa_orchestrator.domain.models import WorkerState
-from rpa_orchestrator.persistence import HeartbeatRepository
-from rpa_orchestrator.worker.heartbeat import HeartbeatService
+from colmena_rpa.domain.models import WorkerState
+from colmena_rpa.persistence import HeartbeatRepository
+from colmena_rpa.worker.heartbeat import HeartbeatService
 
 
 def test_heartbeat_tracks_state_and_final_outcomes(heartbeats: HeartbeatRepository) -> None:

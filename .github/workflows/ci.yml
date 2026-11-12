@@ -14,13 +14,17 @@ permissions:
 
 jobs:
   quality:
-    name: Lint · Tipos · Unitarias
+    name: Lint · Tipos · Unitarias (Python ${{ matrix.python }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python }}
           cache: pip
       - run: pip install -e ".[dev]"
       - run: ruff check .
@@ -29,7 +33,7 @@ jobs:
       - run: pytest --cov --cov-report=term --cov-report=xml
       - uses: actions/upload-artifact@v7
         with:
-          name: coverage
+          name: cobertura-py${{ matrix.python }}
           path: coverage.xml
 
   e2e:
@@ -90,6 +94,6 @@ jobs:
         with:
           context: .
           push: false
-          tags: rpa-orchestrator:ci
+          tags: colmena-rpa:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max

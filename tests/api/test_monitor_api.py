@@ -8,11 +8,11 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from rpa_orchestrator.config import Settings
-from rpa_orchestrator.domain.models import TaskMessage, WorkerState, utcnow
-from rpa_orchestrator.monitor.app import create_app
-from rpa_orchestrator.persistence import HeartbeatRepository, TaskRepository
-from rpa_orchestrator.persistence.repository import Heartbeat
+from colmena_rpa.config import Settings
+from colmena_rpa.domain.models import TaskMessage, WorkerState, utcnow
+from colmena_rpa.monitor.app import create_app
+from colmena_rpa.persistence import HeartbeatRepository, TaskRepository
+from colmena_rpa.persistence.repository import Heartbeat
 
 
 class FakePublisher:
@@ -155,5 +155,5 @@ def test_prometheus_metrics(client: TestClient, repo, heartbeats) -> None:  # ty
 def test_dashboard_is_served(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == 200
-    assert "RPA Monitor" in response.text
+    assert "Colmena RPA" in response.text
     assert client.get("/static/app.js").status_code == 200

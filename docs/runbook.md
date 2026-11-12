@@ -27,8 +27,8 @@ WHERE task_id = '<uuid>' ORDER BY id;
 ## 1. Un bot aparece OFFLINE
 
 1. Verificar el servicio en el servidor:
-   - Linux: `systemctl status rpa-worker@1` y `journalctl -u rpa-worker@1 -n 200`.
-   - Windows: `Get-Service rpa-worker-*` y `C:\rpa-orchestrator\logs\rpa-worker-1.log`.
+   - Linux: `systemctl status colmena-obrera@1` y `journalctl -u colmena-obrera@1 -n 200`.
+   - Windows: `Get-Service colmena-obrera-*` y `C:\colmena-rpa\logs\colmena-obrera-1.log`.
 2. Si el proceso está vivo pero no reporta, revisar conectividad a PostgreSQL (`heartbeat.failed`
    en los logs).
 3. Reiniciar el servicio. La tarea que tenía en curso vuelve a la cola automáticamente (no se
@@ -49,13 +49,13 @@ WHERE task_id = '<uuid>' ORDER BY id;
 ## 3. El portal está caído
 
 - Los workers seguirán reintentando con espera (10 s, 60 s, 300 s) y luego enviarán a la DLQ.
-- Si la caída será larga, detener los workers (`systemctl stop rpa-worker@*`) para que las
+- Si la caída será larga, detener los workers (`systemctl stop colmena-obrera@*`) para que las
   tareas esperen en la cola principal sin consumir intentos; al volver el portal, iniciarlos.
 
 ## 4. Credenciales del portal rechazadas
 
 - Síntoma: errores `credenciales del portal rechazadas` en muchas tareas.
-- Actualizar `RPA_PORTAL_PASSWORD` en `/etc/rpa-orchestrator/worker.env` (Linux) o en el
+- Actualizar `RPA_PORTAL_PASSWORD` en `/etc/colmena-rpa/worker.env` (Linux) o en el
   `worker.env` del servidor Windows y reiniciar los servicios. Reprocesar las fallidas.
 
 ## 5. Tareas atascadas en RUNNING
@@ -67,8 +67,8 @@ WHERE task_id = '<uuid>' ORDER BY id;
 
 ## 6. Escalar la capacidad
 
-- Docker: `docker compose up -d --scale worker=4`.
-- Linux: `systemctl enable --now rpa-worker@3`.
+- Docker: `docker compose up -d --scale obrera=4`.
+- Linux: `systemctl enable --now colmena-obrera@3`.
 - Windows: `.\deploy\windows\install-service.ps1 -Version <tag> -Instances 3`.
 - Regla práctica: el límite lo pone el aplicativo operado, no el broker. Subir de a un worker y
   observar la tasa de 503/timeouts en el dashboard.

@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from rpa_orchestrator.domain.models import TaskStatus, WorkerState
+from colmena_rpa.domain.models import TaskStatus, WorkerState
 
 
 class BotOut(BaseModel):

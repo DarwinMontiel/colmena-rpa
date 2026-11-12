@@ -1,0 +1,30 @@
+# Bot obrero de Colmena RPA como servicio systemd (plantilla: varias instancias por servidor).
+#   sudo cp deploy/linux/colmena-obrera@.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now colmena-obrera@1 colmena-obrera@2
+#   journalctl -u colmena-obrera@1 -f
+[Unit]
+Description=Colmena RPA · bot obrero %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=colmena
+Group=colmena
+WorkingDirectory=/opt/colmena-rpa
+EnvironmentFile=/etc/colmena-rpa/worker.env
+Environment=RPA_WORKER_ID=%H-obrera-%i
+ExecStart=/opt/colmena-rpa/.venv/bin/colmena-obrera
+# Parada ordenada: SIGTERM -> la obrera termina la tarea en curso y confirma el mensaje.
+KillSignal=SIGTERM
+TimeoutStopSec=300
+Restart=always
+RestartSec=5
+# Endurecimiento
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

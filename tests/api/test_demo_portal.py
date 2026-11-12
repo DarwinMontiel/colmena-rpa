@@ -6,7 +6,7 @@ from datetime import date, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
-from rpa_orchestrator.demo_portal.app import create_portal
+from colmena_rpa.demo_portal.app import create_portal
 
 FUTURE = (date.today() + timedelta(days=10)).isoformat()
 

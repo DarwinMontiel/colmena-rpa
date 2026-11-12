@@ -3,14 +3,20 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [project]
-name = "rpa-orchestrator"
-version = "1.0.0"
-description = "Plataforma de bots RPA distribuidos con RabbitMQ, PostgreSQL y monitoreo centralizado."
+name = "colmena-rpa"
+version = "2.0.0"
+description = "Colmena RPA: bots obreros distribuidos con RabbitMQ, trazabilidad en PostgreSQL y monitoreo centralizado para operaciones de cobranza."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [{ name = "Darwin Montiel Mora", email = "darwinmontielm@gmail.com" }]
-keywords = ["rpa", "rabbitmq", "postgresql", "playwright", "fastapi", "automation"]
+keywords = ["rpa", "rabbitmq", "postgresql", "playwright", "fastapi", "automatizacion", "cobranza", "cartera"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Natural Language :: Spanish",
+]
 dependencies = [
     "pika>=1.3,<2",
     "sqlalchemy>=2.0,<3",
@@ -28,6 +34,11 @@ dependencies = [
     "playwright>=1.47",
 ]
 
+[project.urls]
+Repositorio = "https://github.com/DarwinMontiel/colmena-rpa"
+Demo = "https://darwinmontiel.github.io/colmena-rpa/"
+Cambios = "https://github.com/DarwinMontiel/colmena-rpa/blob/main/CHANGELOG.md"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8",
@@ -38,12 +49,16 @@ dev = [
 ]
 
 [project.scripts]
-rpa-worker = "rpa_orchestrator.worker.main:main"
-rpa-producer = "rpa_orchestrator.producer.cli:app"
-rpa-monitor = "rpa_orchestrator.monitor.main:main"
+colmena-obrera = "colmena_rpa.worker.main:main"
+colmena-carga = "colmena_rpa.producer.cli:app"
+colmena-monitor = "colmena_rpa.monitor.main:main"
+# Alias de compatibilidad con la v1 (nombres anteriores al renombre).
+rpa-worker = "colmena_rpa.worker.main:main"
+rpa-producer = "colmena_rpa.producer.cli:app"
+rpa-monitor = "colmena_rpa.monitor.main:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/rpa_orchestrator"]
+packages = ["src/colmena_rpa"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -54,7 +69,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["rpa_orchestrator"]
+source = ["colmena_rpa"]
 omit = ["*/worker/main.py", "*/monitor/main.py", "*/bots/payment_agreement.py"]
 
 [tool.coverage.report]
@@ -72,7 +87,7 @@ ignore = ["S101", "B008", "RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S105", "S106", "S311"]
-"src/rpa_orchestrator/demo_portal/**" = ["S105", "S311"]
+"src/colmena_rpa/demo_portal/**" = ["S105", "S311"]
 
 [tool.mypy]
 python_version = "3.11"

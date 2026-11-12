@@ -6,15 +6,15 @@ from typing import Any
 import pytest
 from sqlalchemy import Engine
 
-from rpa_orchestrator.bots.base import Bot, BotContext, BotResult
-from rpa_orchestrator.bots.registry import BotRegistry
-from rpa_orchestrator.config import Settings
-from rpa_orchestrator.domain.errors import BusinessRuleError, TransientError
-from rpa_orchestrator.domain.models import TaskMessage
-from rpa_orchestrator.messaging.retry import RetryPolicy
-from rpa_orchestrator.persistence import HeartbeatRepository, TaskRepository, create_db_engine
-from rpa_orchestrator.persistence.tables import metadata
-from rpa_orchestrator.worker.processor import TaskProcessor
+from colmena_rpa.bots.base import Bot, BotContext, BotResult
+from colmena_rpa.bots.registry import BotRegistry
+from colmena_rpa.config import Settings
+from colmena_rpa.domain.errors import BusinessRuleError, TransientError
+from colmena_rpa.domain.models import TaskMessage
+from colmena_rpa.messaging.retry import RetryPolicy
+from colmena_rpa.persistence import HeartbeatRepository, TaskRepository, create_db_engine
+from colmena_rpa.persistence.tables import metadata
+from colmena_rpa.worker.processor import TaskProcessor
 
 
 class ScriptedBot(Bot):

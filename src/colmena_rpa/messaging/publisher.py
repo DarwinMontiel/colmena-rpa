@@ -8,8 +8,8 @@ from typing import Any, Protocol
 
 import pika
 
-from rpa_orchestrator.domain.models import TaskMessage
-from rpa_orchestrator.messaging.topology import ProcessTopology
+from colmena_rpa.domain.models import TaskMessage
+from colmena_rpa.messaging.topology import ProcessTopology
 
 
 class Publisher(Protocol):

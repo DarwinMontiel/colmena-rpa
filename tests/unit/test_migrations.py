@@ -11,8 +11,8 @@ from alembic.config import Config
 from alembic.migration import MigrationContext
 from sqlalchemy import create_engine
 
-from rpa_orchestrator.config import get_settings
-from rpa_orchestrator.persistence.tables import metadata
+from colmena_rpa.config import get_settings
+from colmena_rpa.persistence.tables import metadata
 
 ROOT = Path(__file__).parents[2]
 

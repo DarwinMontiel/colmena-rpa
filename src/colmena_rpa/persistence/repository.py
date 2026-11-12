@@ -11,8 +11,8 @@ from uuid import UUID
 from sqlalchemy import Connection, Engine, func, insert, select, update
 from sqlalchemy.dialects import postgresql, sqlite
 
-from rpa_orchestrator.domain.models import TaskMessage, TaskStatus, WorkerState, utcnow
-from rpa_orchestrator.persistence.tables import bot_heartbeats, task_events, tasks
+from colmena_rpa.domain.models import TaskMessage, TaskStatus, WorkerState, utcnow
+from colmena_rpa.persistence.tables import bot_heartbeats, task_events, tasks
 
 Clock = Callable[[], datetime]
 

@@ -17,10 +17,10 @@ from playwright.sync_api import Browser, BrowserContext, Page, Playwright, sync_
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from pydantic import BaseModel, Field, ValidationError
 
-from rpa_orchestrator.bots.base import Bot, BotContext, BotResult
-from rpa_orchestrator.config import Settings
-from rpa_orchestrator.domain.errors import BusinessRuleError, TransientError
-from rpa_orchestrator.logging import get_logger
+from colmena_rpa.bots.base import Bot, BotContext, BotResult
+from colmena_rpa.config import Settings
+from colmena_rpa.domain.errors import BusinessRuleError, TransientError
+from colmena_rpa.logging import get_logger
 
 log = get_logger(__name__)
 

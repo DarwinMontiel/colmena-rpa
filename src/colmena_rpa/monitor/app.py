@@ -17,11 +17,11 @@ from prometheus_client.core import GaugeMetricFamily
 from prometheus_client.registry import Collector
 from sqlalchemy import Engine, text
 
-from rpa_orchestrator import __version__
-from rpa_orchestrator.config import Settings
-from rpa_orchestrator.domain.models import TaskMessage, TaskStatus, utcnow
-from rpa_orchestrator.messaging.publisher import Publisher, open_publisher
-from rpa_orchestrator.monitor.schemas import (
+from colmena_rpa import __version__
+from colmena_rpa.config import Settings
+from colmena_rpa.domain.models import TaskMessage, TaskStatus, utcnow
+from colmena_rpa.messaging.publisher import Publisher, open_publisher
+from colmena_rpa.monitor.schemas import (
     BotOut,
     EventOut,
     RequeueOut,
@@ -29,8 +29,8 @@ from rpa_orchestrator.monitor.schemas import (
     TaskDetailOut,
     TaskOut,
 )
-from rpa_orchestrator.persistence import HeartbeatRepository, TaskRepository
-from rpa_orchestrator.persistence.repository import Heartbeat, TaskRecord
+from colmena_rpa.persistence import HeartbeatRepository, TaskRepository
+from colmena_rpa.persistence.repository import Heartbeat, TaskRecord
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -117,9 +117,9 @@ def create_app(
     )
 
     app = FastAPI(
-        title="RPA Orchestrator · Monitor",
+        title="Colmena RPA · Monitor",
         version=__version__,
-        description="Estado de bots, tareas y trazabilidad de ejecuciones.",
+        description="Estado de los bots obreros, tareas y trazabilidad de cada ejecución.",
     )
 
     def list_bots() -> list[BotOut]:

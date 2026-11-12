@@ -36,10 +36,10 @@ up: ## Plataforma completa con Docker
 down: ## Detiene la plataforma
 	docker compose down
 
-enqueue: ## Encola el lote de ejemplo
-	docker compose run --rm producer rpa-producer enqueue --file data/sample_tasks.csv
+encolar: ## Encola el lote de ejemplo (fechas relativas a hoy)
+	docker compose run --rm carga colmena-carga encolar --archivo data/sample_tasks.csv
 
 migrate: ## Aplica migraciones
 	alembic upgrade head
 
-.PHONY: help install lint format test e2e integration infra up down enqueue migrate
+.PHONY: help install lint format test e2e integration infra up down encolar migrate

@@ -1,13 +1,17 @@
-# Plataforma completa en local:  docker compose up --build -d
+# Colmena RPA completa en local:  docker compose up --build -d
 #   Monitor:        http://localhost:8000
 #   RabbitMQ UI:    http://localhost:15672  (guest / guest)
 #   Portal demo:    http://localhost:8001
-# Encolar el lote de ejemplo:
-#   docker compose run --rm producer rpa-producer enqueue --file data/sample_tasks.csv
+# Encolar el lote de ejemplo (las fechas del CSV son relativas a hoy):
+#   docker compose run --rm carga colmena-carga encolar --archivo data/sample_tasks.csv
+# Más obreras:
+#   docker compose up -d --scale obrera=4
+
+name: colmena-rpa
 
 x-app: &app
   build: .
-  image: rpa-orchestrator:local
+  image: colmena-rpa:local
   env_file: .env.example
   environment:
     RPA_DATABASE_URL: postgresql+psycopg://rpa:rpa@postgres:5432/rpa
@@ -17,6 +21,12 @@ x-app: &app
     postgres: { condition: service_healthy }
     rabbitmq: { condition: service_healthy }
     migrate: { condition: service_completed_successfully }
+
+x-http-healthcheck: &http-healthcheck
+  interval: 15s
+  timeout: 5s
+  retries: 5
+  start_period: 10s
 
 services:
   postgres:
@@ -42,7 +52,7 @@ services:
 
   migrate:
     build: .
-    image: rpa-orchestrator:local
+    image: colmena-rpa:local
     environment:
       RPA_DATABASE_URL: postgresql+psycopg://rpa:rpa@postgres:5432/rpa
     command: ["alembic", "upgrade", "head"]
@@ -52,27 +62,35 @@ services:
 
   portal:
     build: .
-    image: rpa-orchestrator:local
-    command: ["uvicorn", "rpa_orchestrator.demo_portal.app:build", "--factory", "--host", "0.0.0.0", "--port", "8001"]
+    image: colmena-rpa:local
+    command: ["uvicorn", "colmena_rpa.demo_portal.app:build", "--factory", "--host", "0.0.0.0", "--port", "8001"]
     ports: ["8001:8001"]
     environment:
       PORTAL_FAILURE_RATE: "0.15"  # 15 % de respuestas 503 para ejercitar los reintentos
+    healthcheck:
+      <<: *http-healthcheck
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8001/health', timeout=3)"]
 
-  worker:
+  obrera:
     <<: *app
-    command: ["rpa-worker"]
+    command: ["colmena-obrera"]
     deploy:
       replicas: 2
     volumes: [artifacts:/app/artifacts]
+    restart: unless-stopped
 
   monitor:
     <<: *app
-    command: ["rpa-monitor"]
+    command: ["colmena-monitor"]
     ports: ["8000:8000"]
+    restart: unless-stopped
+    healthcheck:
+      <<: *http-healthcheck
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
 
-  producer:
+  carga:
     <<: *app
-    command: ["rpa-producer", "--help"]
+    command: ["colmena-carga", "--help"]
     profiles: ["tools"]
 
 volumes:

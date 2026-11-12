@@ -1,15 +1,15 @@
 [Unit]
-Description=RPA Orchestrator monitor (API + dashboard)
+Description=Colmena RPA · monitor (API + panel de operación)
 After=network-online.target
 
 [Service]
 Type=simple
-User=rpa
-WorkingDirectory=/opt/rpa-orchestrator
-EnvironmentFile=/etc/rpa-orchestrator/monitor.env
+User=colmena
+WorkingDirectory=/opt/colmena-rpa
+EnvironmentFile=/etc/colmena-rpa/monitor.env
 Environment=RPA_MONITOR_HOST=127.0.0.1
 Environment=RPA_MONITOR_PORT=8000
-ExecStart=/opt/rpa-orchestrator/.venv/bin/rpa-monitor
+ExecStart=/opt/colmena-rpa/.venv/bin/colmena-monitor
 Restart=always
 RestartSec=5
 NoNewPrivileges=true

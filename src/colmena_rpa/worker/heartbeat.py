@@ -7,10 +7,10 @@ import socket
 import threading
 from uuid import UUID
 
-from rpa_orchestrator import __version__
-from rpa_orchestrator.domain.models import WorkerState, utcnow
-from rpa_orchestrator.logging import get_logger
-from rpa_orchestrator.persistence.repository import Heartbeat, HeartbeatRepository
+from colmena_rpa import __version__
+from colmena_rpa.domain.models import WorkerState, utcnow
+from colmena_rpa.logging import get_logger
+from colmena_rpa.persistence.repository import Heartbeat, HeartbeatRepository
 
 log = get_logger(__name__)
 

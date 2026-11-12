@@ -3,8 +3,8 @@ from __future__ import annotations
 import contextlib
 from collections.abc import Callable
 
-from rpa_orchestrator.bots.base import Bot
-from rpa_orchestrator.domain.errors import UnknownProcessError
+from colmena_rpa.bots.base import Bot
+from colmena_rpa.domain.errors import UnknownProcessError
 
 BotFactory = Callable[[], Bot]
 

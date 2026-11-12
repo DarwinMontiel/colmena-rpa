@@ -10,13 +10,13 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from rpa_orchestrator.bots.base import BotContext
-from rpa_orchestrator.bots.registry import BotRegistry
-from rpa_orchestrator.domain.errors import BusinessRuleError
-from rpa_orchestrator.domain.models import TaskMessage
-from rpa_orchestrator.logging import get_logger
-from rpa_orchestrator.messaging.retry import RetryPolicy
-from rpa_orchestrator.persistence.repository import TaskRepository
+from colmena_rpa.bots.base import BotContext
+from colmena_rpa.bots.registry import BotRegistry
+from colmena_rpa.domain.errors import BusinessRuleError
+from colmena_rpa.domain.models import TaskMessage
+from colmena_rpa.logging import get_logger
+from colmena_rpa.messaging.retry import RetryPolicy
+from colmena_rpa.persistence.repository import TaskRepository
 
 log = get_logger(__name__)
 
