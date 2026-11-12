@@ -4,6 +4,7 @@ import os
 import random
 import secrets
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from typing import Annotated, Any
@@ -98,6 +99,7 @@ def create_portal(
     failure_rate: float = 0.0,
     clients: list[Client] | None = None,
     rand: random.Random | None = None,
+    today: Callable[[], date] = date.today,
 ) -> FastAPI:
     env = Environment(loader=DictLoader(TEMPLATES), autoescape=select_autoescape())
     rng = rand or random.Random()
@@ -195,7 +197,7 @@ def create_portal(
             error = None
             if not 1 <= cuotas <= 36:
                 error = "El número de cuotas debe estar entre 1 y 36"
-            elif fecha_primer_pago < date.today():
+            elif fecha_primer_pago < today():
                 error = "La fecha del primer pago no puede estar en el pasado"
             elif total < client.saldo * MIN_COVERAGE:
                 error = f"El acuerdo no cubre el {MIN_COVERAGE:.0%} mínimo del saldo en mora"
