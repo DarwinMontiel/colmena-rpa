@@ -58,10 +58,7 @@ a { color: var(--accent); }
   padding: 14px 24px; background: var(--topbar); color: #fff; flex-wrap: wrap;
 }
 .brand { display: flex; align-items: center; gap: 12px; }
-.logo {
-  width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center;
-  background: #0d9488; font-weight: 800; font-size: 18px;
-}
+.logo { width: 38px; height: 38px; flex: none; }
 .topbar h1 { margin: 0; font-size: 17px; letter-spacing: .2px; }
 .subtitle { margin: 0; color: #9fb3c2; font-size: 12.5px; }
 .status { display: flex; align-items: center; gap: 12px; font-size: 13px; color: #c7d4de; }
@@ -141,6 +138,15 @@ pre { margin: 0; padding: 12px; background: var(--surface-2); border: 1px solid 
   font: inherit; font-weight: 600; cursor: pointer; justify-self: start;
 }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.agreement {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px 18px;
+  padding: 14px; border-radius: 10px; background: var(--accent-soft);
+}
+.field .badge { margin: 4px 0 8px; }
+details summary { cursor: pointer; }
+details summary small { display: inline; }
+details pre { margin-top: 8px; }
 
 .footer { text-align: center; color: var(--muted); padding: 8px 0 28px; font-size: 12.5px; }
 

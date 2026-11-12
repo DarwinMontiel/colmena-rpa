@@ -4,21 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Colmena RPA · Panel de operación</title>
-  <meta name="description" content="Monitoreo centralizado de bots RPA: estado de workers, tareas y trazabilidad.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230d9488'/><path d='M9 21V11h6a4 4 0 0 1 0 8h-6m6 0 4 4' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round'/></svg>">
+  <meta name="description" content="Colmena RPA: panel de operación de bots obreros que registran acuerdos de pago. Estado de cada obrera, tareas, reintentos y trazabilidad.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2.5 27.7 9.25v13.5L16 29.5 4.3 22.75V9.25Z' fill='%230d9488'/><path d='M16 10.5l4.8 2.75v5.5L16 21.5l-4.8-2.75v-5.5Z' fill='none' stroke='white' stroke-width='2.2' stroke-linejoin='round'/></svg>">
   <link rel="stylesheet" href="./static/styles.css">
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="logo" aria-hidden="true">R</span>
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 2.5 27.7 9.25v13.5L16 29.5 4.3 22.75V9.25Z" fill="#0d9488"/>
+        <path d="M16 10.5l4.8 2.75v5.5L16 21.5l-4.8-2.75v-5.5Z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>
+      </svg>
       <div>
         <h1>Colmena RPA</h1>
-        <p class="subtitle">Bots · Colas RabbitMQ · Trazabilidad PostgreSQL</p>
+        <p class="subtitle">Panel de operación · bots obreros de acuerdos de pago</p>
       </div>
     </div>
     <div class="status">
-      <span id="mode-badge" class="badge badge-muted" hidden>Modo demo</span>
+      <span id="mode-badge" class="badge badge-muted" hidden title="Datos simulados en el navegador">Modo demo</span>
       <span class="live"><span class="dot" id="live-dot"></span><span id="updated">Conectando…</span></span>
     </div>
   </header>
@@ -28,19 +31,19 @@
       <article class="kpi"><h2>Completadas</h2><p id="k-done">–</p><small id="k-done-hour">–</small></article>
       <article class="kpi"><h2>Fallidas</h2><p id="k-failed">–</p><small id="k-failed-hour">–</small></article>
       <article class="kpi"><h2>En curso / reintento</h2><p id="k-running">–</p><small id="k-pending">–</small></article>
-      <article class="kpi"><h2>Tasa de éxito</h2><p id="k-rate">–</p><small>DONE / (DONE + FAILED)</small></article>
+      <article class="kpi"><h2>Tasa de éxito</h2><p id="k-rate">–</p><small>completadas / (completadas + fallidas)</small></article>
       <article class="kpi"><h2>Duración promedio</h2><p id="k-duration">–</p><small>tareas exitosas · 24 h</small></article>
-      <article class="kpi"><h2>Bots en línea</h2><p id="k-bots">–</p><small id="k-bots-off">–</small></article>
+      <article class="kpi"><h2>Obreras en línea</h2><p id="k-bots">–</p><small id="k-bots-off">–</small></article>
     </section>
 
     <section class="panel">
       <div class="panel-head">
-        <h2>Workers</h2>
-        <span class="hint">Un worker se marca OFFLINE si no reporta latido en 60 s</span>
+        <h2>Obreras</h2>
+        <span class="hint">Cada obrera es un bot en un servidor Windows o Linux. Si no reporta latido en 60 s se marca «Sin latido».</span>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Worker</th><th>Salud</th><th>Estado</th><th>Plataforma</th><th>Procesos</th><th class="num">OK</th><th class="num">Fallos</th><th>Último latido</th></tr></thead>
+          <thead><tr><th>Obrera</th><th>Salud</th><th>Estado</th><th>Plataforma</th><th>Procesos</th><th class="num">Exitosas</th><th class="num">Fallidas</th><th>Último latido</th></tr></thead>
           <tbody id="bots-body"><tr><td colspan="8" class="empty">Sin datos</td></tr></tbody>
         </table>
       </div>
@@ -51,8 +54,8 @@
         <h2>Tareas</h2>
         <div class="filters" role="group" aria-label="Filtrar por estado" id="filters">
           <button class="chip active" data-status="">Todas</button>
-          <button class="chip" data-status="RUNNING">En curso</button>
-          <button class="chip" data-status="RETRYING">Reintento</button>
+          <button class="chip" data-status="RUNNING">En ejecución</button>
+          <button class="chip" data-status="RETRYING">Reintentando</button>
           <button class="chip" data-status="PENDING">Pendientes</button>
           <button class="chip" data-status="DONE">Completadas</button>
           <button class="chip" data-status="FAILED">Fallidas</button>
@@ -60,7 +63,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Tarea</th><th>Proceso</th><th>Estado</th><th class="num">Intentos</th><th>Worker</th><th>Actualizada</th><th class="num">Duración</th><th>Último error</th></tr></thead>
+          <thead><tr><th>Tarea</th><th>Proceso</th><th>Estado</th><th class="num">Intentos</th><th>Obrera</th><th>Actualizada</th><th class="num">Duración</th><th>Último error</th></tr></thead>
           <tbody id="tasks-body"><tr><td colspan="8" class="empty">Sin datos</td></tr></tbody>
         </table>
       </div>
@@ -69,7 +72,7 @@
 
   <dialog id="detail" aria-labelledby="detail-title">
     <form method="dialog" class="dialog-head">
-      <h2 id="detail-title">Detalle de tarea</h2>
+      <h2 id="detail-title">Detalle de la tarea</h2>
       <button class="icon" aria-label="Cerrar">✕</button>
     </form>
     <div id="detail-body" class="dialog-body"></div>
@@ -77,7 +80,8 @@
 
   <footer class="footer">
     <a href="https://github.com/DarwinMontiel/colmena-rpa">Código fuente</a> ·
-    <a href="./docs" id="api-docs">API (OpenAPI)</a>
+    <a href="./docs" id="api-docs">API (OpenAPI)</a> ·
+    <a href="https://github.com/DarwinMontiel/torre-de-control" title="Monitoreo en tiempo real de las colas de Colmena RPA">Torre de control</a>
   </footer>
 
   <script type="module" src="./static/app.js"></script>

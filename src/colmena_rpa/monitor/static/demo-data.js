@@ -1,5 +1,5 @@
 // Datos simulados para la demo pública (GitHub Pages). Imitan las respuestas reales de la API
-// y evolucionan con el tiempo: los workers toman tareas, algunas fallan y se reintentan.
+// y evolucionan con el tiempo: las obreras toman tareas, algunas fallan y se reintentan.
 
 const PROCESSES = ["payment_agreement"];
 const ERRORS_TRANSIENT = [
@@ -26,11 +26,14 @@ export function createDemoApi() {
   const rand = rng(20261105);
   const now = () => Date.now();
   const iso = (ms) => new Date(ms).toISOString();
+  const today = new Date();
+  const inDays = (n) => new Date(today.getFullYear(), today.getMonth(), today.getDate() + n).toLocaleDateString("en-CA");
+  const batch = `lote-cartera-${today.toLocaleDateString("en-CA").replaceAll("-", "")}`;
   const bots = [
-    { worker_id: "srv-linux-01-w1", hostname: "srv-linux-01", platform: "Linux 6.8.0", alive: true },
-    { worker_id: "srv-linux-01-w2", hostname: "srv-linux-01", platform: "Linux 6.8.0", alive: true },
-    { worker_id: "srv-win-02-w1", hostname: "srv-win-02", platform: "Windows Server 2022", alive: true },
-    { worker_id: "srv-win-03-w1", hostname: "srv-win-03", platform: "Windows Server 2019", alive: false },
+    { worker_id: "srv-linux-01-obrera-1", hostname: "srv-linux-01", platform: "Linux 6.8.0", alive: true },
+    { worker_id: "srv-linux-01-obrera-2", hostname: "srv-linux-01", platform: "Linux 6.8.0", alive: true },
+    { worker_id: "srv-win-02-obrera-1", hostname: "srv-win-02", platform: "Windows Server 2022", alive: true },
+    { worker_id: "srv-win-03-obrera-1", hostname: "srv-win-03", platform: "Windows Server 2019", alive: false },
   ].map((b) => ({
     ...b,
     processes: PROCESSES,
@@ -52,7 +55,7 @@ export function createDemoApi() {
       status: "PENDING",
       attempts: 0,
       last_error: null,
-      correlation_id: "cartera_mora_30-20261105T080000",
+      correlation_id: batch,
       worker_id: null,
       created_at: iso(createdMs),
       updated_at: iso(createdMs),
@@ -63,7 +66,8 @@ export function createDemoApi() {
         documento: doc,
         cuotas: 1 + Math.floor(rand() * 12),
         valor_cuota: Math.round(80000 + rand() * 420000),
-        fecha_primer_pago: "2026-12-01",
+        // Fechas relativas, como el lote de ejemplo: la demo nunca muestra pagos vencidos.
+        fecha_primer_pago: inDays(5 + Math.floor(rand() * 20)),
       },
       output: null,
       events: [{ event: "ENQUEUED", attempt: 0, detail: null, worker_id: null, at: iso(createdMs) }],
