@@ -2,7 +2,7 @@
 # Imagen única de Colmena RPA para obrera, monitor, carga de lotes y portal demo
 # (cambia solo el comando). Los healthchecks se definen por servicio en docker-compose.yml.
 
-FROM python:3.12-slim AS base
+FROM python:3.15-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
