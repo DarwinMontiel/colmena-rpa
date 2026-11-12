@@ -37,8 +37,9 @@ const esc = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 const fmtNum = (n) => (n ?? 0).toLocaleString("es-CO");
-const fmtPct = (r) => (r == null ? "–" : `${(r * 100).toFixed(1)} %`);
-const fmtSecs = (s) => (s == null ? "–" : s < 60 ? `${s.toFixed(1)} s` : `${(s / 60).toFixed(1)} min`);
+const fmt1 = (n) => n.toLocaleString("es-CO", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmtPct = (r) => (r == null ? "–" : `${fmt1(r * 100)} %`);
+const fmtSecs = (s) => (s == null ? "–" : s < 60 ? `${fmt1(s)} s` : `${fmt1(s / 60)} min`);
 const fmtTime = (iso) => (iso ? new Date(iso).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "medium" }) : "–");
 function fmtAgo(seconds) {
   if (seconds < 60) return `hace ${Math.round(seconds)} s`;
