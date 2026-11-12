@@ -1,6 +1,6 @@
 # Arquitectura
 
-Este documento describe cómo está construida la plataforma, por qué cada pieza existe y qué
+Este documento describe cómo está construida Colmena RPA, por qué cada pieza existe y qué
 garantías ofrece. Las decisiones puntuales están registradas como [ADRs](adr/).
 
 ## 1. Contexto
@@ -14,7 +14,7 @@ consultable. La plataforma resuelve tres problemas:
 2. **Tolerar fallas**: los errores transitorios se reintentan con espera creciente; los de negocio
    no se reintentan y quedan para revisión.
 3. **Ver qué pasa**: cada tarea tiene estado y bitácora en PostgreSQL; cada bot reporta latidos;
-   un dashboard y métricas Prometheus centralizan el monitoreo.
+   un panel de operación y métricas Prometheus centralizan el monitoreo.
 
 ## 2. Componentes
 
@@ -37,7 +37,7 @@ flowchart LR
         DLX --> DLQ
     end
 
-    subgraph Workers["Workers (Linux / Windows Server)"]
+    subgraph Obreras["Obreras (Linux / Windows Server)"]
         W1[colmena-obrera #1]
         W2[colmena-obrera #2]
         WN[colmena-obrera #N]
@@ -60,14 +60,14 @@ flowchart LR
 |---|---|---|
 | `colmena-carga` | Lee archivos de entrada, asigna `task_id` determinístico, registra y publica. | Bajo demanda (CLI / tarea programada). |
 | RabbitMQ | Desacopla productores de bots; reparte carga; retiene mensajes ante caídas. | Cluster de 3 nodos con colas quorum en producción. |
-| `colmena-obrera` | Consume, ejecuta el bot, decide el desenlace y confirma el mensaje. | Horizontal: más instancias = más throughput. |
+| `colmena-obrera` | Consume, ejecuta el bot, decide el desenlace y confirma el mensaje. | Horizontal: más instancias = más capacidad. |
 | PostgreSQL | Fuente de verdad del estado de tareas, bitácora de auditoría y latidos. | Vertical + réplicas de lectura para el monitor. |
-| `colmena-monitor` | API REST, dashboard web, métricas Prometheus y reproceso manual. | Sin estado: varias instancias tras un balanceador. |
+| `colmena-monitor` | API REST, panel de operación, métricas Prometheus y reproceso manual. | Sin estado: varias instancias tras un balanceador. |
 | Portal demo | Simula el aplicativo legado que el bot opera (incluye fallas 503 configurables). | Solo para desarrollo y demos. |
 
-## 3. Diseño interno del worker
+## 3. Diseño interno de la obrera (worker)
 
-El worker sigue una arquitectura de **puertos y adaptadores**: la lógica que decide qué hacer con
+La obrera sigue una arquitectura de **puertos y adaptadores**: la lógica que decide qué hacer con
 una tarea (`TaskProcessor`) no conoce RabbitMQ; recibe un `TaskMessage` y devuelve un `Outcome`.
 El adaptador (`worker/runtime.py`) traduce ese `Outcome` a operaciones del broker.
 
@@ -127,7 +127,7 @@ se bloquea, deja de enviar latidos AMQP y el broker corta la conexión. Por eso:
 ```mermaid
 stateDiagram-v2
     [*] --> PENDING: producer registra y publica
-    PENDING --> RUNNING: worker la toma
+    PENDING --> RUNNING: una obrera la toma
     RUNNING --> DONE: bot OK
     RUNNING --> RETRYING: TransientError / excepción no prevista
     RETRYING --> RUNNING: vence el TTL de la cola de espera
@@ -190,15 +190,15 @@ la migración produce exactamente el esquema declarado en código.
 |---|---|---|
 | El portal responde 503 o hay timeout | Se reintenta en 10 s, 60 s y 300 s | Colas de espera con TTL ([ADR-0002](adr/0002-reintentos-con-colas-ttl.md)) |
 | Dato inválido / cliente inexistente | No se reintenta; queda `FAILED` y en la DLQ con el error | Clasificación de errores ([ADR-0004](adr/0004-clasificacion-de-errores-rpa.md)) |
-| El worker muere a mitad de una tarea | RabbitMQ reentrega el mensaje a otro worker | `ack` manual después de persistir |
+| Una obrera muere a mitad de una tarea | RabbitMQ reentrega el mensaje a otra obrera | `ack` manual después de persistir |
 | Se reentrega una tarea ya terminada | Se confirma sin ejecutar el bot | Reclamo atómico: `UPDATE … WHERE status NOT IN ('DONE','FAILED')` |
 | Operación pulsa *Reprocesar* sobre una tarea pendiente reciente | Se rechaza (409): su mensaje aún está en la cola | Solo fallidas o pendientes con más de 15 min sin movimiento (`RPA_REQUEUE_PENDING_AFTER_SECONDS`) |
 | Doble clic en *Reprocesar* | Se publica una sola vez | Guarda optimista sobre `status` + `updated_at` |
 | PostgreSQL cae mientras una obrera procesa | El mensaje vuelve a la cola (`nack`) y la obrera queda libre | Captura de fallas de infraestructura en `worker/runtime.py` |
 | El bot repite un registro en el portal | El portal devuelve la misma confirmación | Referencia idempotente = `task_id` ([ADR-0003](adr/0003-idempotencia-y-at-least-once.md)) |
 | Se carga dos veces el mismo archivo | Las filas repetidas se omiten | `task_id` determinístico (hash del contenido) |
-| RabbitMQ no está disponible | El worker reintenta conectar con backoff exponencial (máx. 30 s) | Bucle de reconexión |
-| Un worker deja de reportar | El monitor lo marca `OFFLINE` a los 60 s y `rpa_bot_up` = 0 | Latidos ([ADR-0005](adr/0005-monitoreo-por-heartbeats.md)) |
+| RabbitMQ no está disponible | La obrera reintenta conectar con backoff exponencial (máx. 30 s) | Bucle de reconexión |
+| Una obrera deja de reportar | El monitor la marca `OFFLINE` («Sin latido») a los 60 s y `rpa_bot_up` = 0 | Latidos ([ADR-0005](adr/0005-monitoreo-por-heartbeats.md)) |
 | Mensaje con JSON inválido | Se rechaza sin reencolar y termina en la DLQ | `x-dead-letter-exchange` de la cola principal |
 | Navegador colgado tras un error | Se destruye y se recrea el bot antes del siguiente intento | `BotRegistry.reset()` |
 
@@ -212,7 +212,12 @@ tres capas (estado final, referencia idempotente, `task_id` determinístico).
 - **Métricas Prometheus** en `/metrics`: `rpa_tasks{process,status}`, `rpa_bot_up{worker}`,
   `rpa_task_duration_avg_seconds`.
 - **Evidencias**: ante cualquier error el bot guarda una captura de pantalla en `artifacts/`.
-- **Dashboard** en `/`: KPIs, workers, tareas filtrables, bitácora por tarea y reproceso.
+- **Panel de operación** en `/`: indicadores, obreras, tareas filtrables, bitácora por tarea
+  con resumen del acuerdo y reproceso.
+- **Monitoreo dedicado**: [torre-de-control](https://github.com/DarwinMontiel/torre-de-control)
+  lee las colas `rpa.*` de RabbitMQ y publica su estado en tiempo real por WebSocket. Los
+  nombres de colas, exchange y métricas (`rpa.tasks`, `rpa_tasks`, `rpa_bot_up`) se
+  mantuvieron tras el renombre a Colmena para no romper esa integración ni las alertas.
 
 ## 8. Seguridad
 

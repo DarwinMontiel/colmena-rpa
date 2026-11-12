@@ -21,4 +21,4 @@
 1. Crear `src/colmena_rpa/bots/<proceso>.py` con una clase que herede de `Bot`.
 2. Traducir errores conocidos a `BusinessRuleError` o `TransientError`.
 3. Garantizar idempotencia respecto a `ctx.task_id`.
-4. Registrarlo en `bots/catalog.py` y agregarlo a `RPA_PROCESSES` del worker que lo ejecutará.
+4. Registrarlo en `bots/catalog.py` y agregarlo a `RPA_PROCESSES` de la obrera que lo ejecutará.

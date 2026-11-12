@@ -21,12 +21,12 @@ Usar **RabbitMQ** con:
 
 - Un exchange `direct` (`rpa.tasks`) y una cola por proceso (`rpa.<proceso>`), tipo **quorum**
   para replicación y durabilidad en un cluster.
-- `prefetch_count = 1` y *ack* manual: cada worker toma una tarea a la vez (*competing consumers*).
+- `prefetch_count = 1` y *ack* manual: cada obrera (worker) toma una tarea a la vez (*competing consumers*).
 - Mensajes persistentes y *publisher confirms* en el productor.
 
 ## Consecuencias
 
-- Escalar es levantar más workers; RabbitMQ reparte la carga sin configuración adicional.
+- Escalar es levantar más obreras; RabbitMQ reparte la carga sin configuración adicional.
 - Reintentos con espera y DLQ se resuelven con primitivas del broker ([ADR-0002](0002-reintentos-con-colas-ttl.md)).
 - Se agrega RabbitMQ a la operación: se incluye en `docker-compose.yml`, en CI (*service
   container*) y en el [runbook](../runbook.md).
