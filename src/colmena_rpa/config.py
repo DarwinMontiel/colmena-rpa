@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     exchange: str = "rpa.tasks"
 
     # Worker
-    worker_id: str = Field(default_factory=lambda: f"{socket.gethostname()}-worker")
+    worker_id: str = Field(default_factory=lambda: f"{socket.gethostname()}-obrera")
     processes: Annotated[list[str], NoDecode] = ["payment_agreement"]
     prefetch_count: int = 1
     max_attempts: int = 4
