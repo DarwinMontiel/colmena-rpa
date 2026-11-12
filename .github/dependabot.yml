@@ -1,15 +1,23 @@
+# Actualizaciones agrupadas: un solo PR por ecosistema. Dependabot redacta los títulos en
+# inglés ("bump X from A to B"); al fusionar se hace squash con un mensaje en español,
+# por ejemplo: "build(deps): actualizar acciones de GitHub".
 version: 2
 updates:
   - package-ecosystem: pip
     directory: /
     schedule: { interval: weekly }
+    commit-message: { prefix: "build(deps)", prefix-development: "build(deps-dev)" }
     groups:
-      python-deps: { patterns: ["*"] }
+      dependencias-python: { patterns: ["*"] }
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
+    commit-message: { prefix: "ci(deps)" }
     groups:
-      actions: { patterns: ["*"] }
+      acciones-github: { patterns: ["*"] }
   - package-ecosystem: docker
     directory: /
     schedule: { interval: monthly }
+    commit-message: { prefix: "build(docker)" }
+    groups:
+      imagen-base: { patterns: ["*"] }
