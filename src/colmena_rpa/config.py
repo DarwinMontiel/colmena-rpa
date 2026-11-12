@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import socket
 from functools import lru_cache
+from typing import Annotated, Any
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -19,10 +21,10 @@ class Settings(BaseSettings):
 
     # Worker
     worker_id: str = Field(default_factory=lambda: f"{socket.gethostname()}-worker")
-    processes: list[str] = ["payment_agreement"]
+    processes: Annotated[list[str], NoDecode] = ["payment_agreement"]
     prefetch_count: int = 1
     max_attempts: int = 4
-    retry_delays_seconds: list[int] = [10, 60, 300]
+    retry_delays_seconds: Annotated[list[int], NoDecode] = [10, 60, 300]
     heartbeat_interval_seconds: int = 15
     artifacts_dir: str = "artifacts"
 
@@ -42,6 +44,21 @@ class Settings(BaseSettings):
     # Observabilidad
     log_level: str = "INFO"
     log_json: bool = True
+
+    @field_validator("processes", "retry_delays_seconds", mode="before")
+    @classmethod
+    def _split_list(cls, value: Any) -> Any:
+        """Acepta listas JSON (``["a","b"]``) o separadas por comas (``a,b``).
+
+        La forma con comas sobrevive intacta a ``source`` de bash, a ``EnvironmentFile`` de
+        systemd y a NSSM, que quitan o conservan comillas de manera distinta.
+        """
+        if not isinstance(value, str):
+            return value
+        text = value.strip()
+        if text.startswith("["):
+            return json.loads(text)
+        return [item.strip().strip("\"'") for item in text.split(",") if item.strip()]
 
     @field_validator("retry_delays_seconds")
     @classmethod
