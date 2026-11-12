@@ -122,7 +122,7 @@ def create_portal(
 
     @app.get("/login", response_class=HTMLResponse)
     def login_form() -> HTMLResponse:
-        return render("login.html", title="Login")
+        return render("login.html", title="Iniciar sesión")
 
     @app.post("/login")
     def login(
@@ -133,7 +133,9 @@ def create_portal(
             secrets.compare_digest(username_, username)
             and secrets.compare_digest(password_, password)
         ):
-            return render("login.html", status=401, title="Login", error="Credenciales inválidas")
+            return render(
+                "login.html", status=401, title="Iniciar sesión", error="Credenciales inválidas"
+            )
         token = secrets.token_urlsafe(24)
         sessions.add(token)
         response = RedirectResponse("/clientes", status_code=303)

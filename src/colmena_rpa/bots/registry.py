@@ -31,7 +31,7 @@ class BotRegistry:
             return bot
         factory = self._factories.get(process)
         if factory is None:
-            raise UnknownProcessError(f"proceso no registrado en este worker: {process}")
+            raise UnknownProcessError(f"proceso no registrado en esta obrera: {process}")
         bot = factory()
         bot.setup()
         self._instances[process] = bot

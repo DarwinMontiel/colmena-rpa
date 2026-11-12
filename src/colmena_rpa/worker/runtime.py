@@ -165,7 +165,7 @@ class Worker:
         if outcome.kind is OutcomeKind.RETRY and outcome.delay_seconds is not None:
             self._publisher.publish_retry(message.next_attempt(), outcome.delay_seconds)
         elif outcome.kind is OutcomeKind.DEAD:
-            self._publisher.publish_dead(message, outcome.error or "unknown")
+            self._publisher.publish_dead(message, outcome.error or "error desconocido")
         channel.basic_ack(delivery_tag)
 
     def _threadsafe(self, callback: Any) -> None:
