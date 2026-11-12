@@ -21,7 +21,10 @@ LABEL org.opencontainers.image.title="colmena-rpa" \
       org.opencontainers.image.source="https://github.com/DarwinMontiel/colmena-rpa" \
       org.opencontainers.image.licenses="MIT"
 COPY --from=build /wheels /wheels
-RUN pip install /wheels/*.whl && rm -rf /wheels \
+# libatomic1: el Node empaquetado con Playwright lo necesita y la imagen slim no lo trae.
+RUN apt-get update && apt-get install -y --no-install-recommends libatomic1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --root-user-action=ignore /wheels/*.whl && rm -rf /wheels \
     && playwright install --with-deps chromium \
     && useradd --create-home --uid 10001 colmena \
     && mkdir -p /app/artifacts && chown colmena:colmena /app/artifacts
