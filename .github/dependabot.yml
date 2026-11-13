@@ -21,3 +21,8 @@ updates:
     commit-message: { prefix: "build(docker)" }
     groups:
       imagen-base: { patterns: ["*"] }
+    ignore:
+      # La imagen usa la versión más nueva de Python que prueba el CI (3.11-3.13). Subirla es
+      # una decisión manual: primero se agrega la versión a la matriz y luego se cambia aquí.
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]

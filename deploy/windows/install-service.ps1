@@ -6,7 +6,7 @@
   .\deploy\windows\install-service.ps1 -Version v2.0.0 -Instances 2
 
 .NOTES
-  Requiere: Python 3.12, Git y NSSM (https://nssm.cc) en el PATH. Ejecutar como administrador.
+  Requiere: Python 3.11 a 3.13 (recomendado 3.13), Git y NSSM (https://nssm.cc) en el PATH. Ejecutar como administrador.
 #>
 [CmdletBinding()]
 param(

@@ -55,7 +55,7 @@ server {
 
 ## 3. Windows Server (servicios con NSSM)
 
-Requisitos: Python 3.12, Git y [NSSM](https://nssm.cc) en el `PATH`. En PowerShell como
+Requisitos: Python 3.11 a 3.13 (recomendado 3.13), Git y [NSSM](https://nssm.cc) en el `PATH`. En PowerShell como
 administrador:
 
 ```powershell
