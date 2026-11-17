@@ -7,7 +7,7 @@ tareas repartidas por RabbitMQ, reintentos con espera, trazabilidad en PostgreSQ
 de operación para servidores Windows y Linux.**
 
 [![CI](https://github.com/DarwinMontiel/colmena-rpa/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinMontiel/colmena-rpa/actions/workflows/ci.yml)
-[![Demo](https://img.shields.io/badge/demo-GitHub%20Pages-0d9488)](https://darwinmontiel.github.io/colmena-rpa/)
+[![Demo](https://img.shields.io/badge/demo-GitHub%20Pages-b45309)](https://darwinmontiel.github.io/colmena-rpa/)
 ![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-3776AB?logo=python&logoColor=white)
 ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-quorum%20%2B%20DLQ-FF6600?logo=rabbitmq&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)

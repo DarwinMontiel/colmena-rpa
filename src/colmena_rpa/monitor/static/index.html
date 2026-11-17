@@ -5,15 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Colmena RPA · Panel de operación</title>
   <meta name="description" content="Colmena RPA: panel de operación de bots obreros que registran acuerdos de pago. Estado de cada obrera, tareas, reintentos y trazabilidad.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2.5 27.7 9.25v13.5L16 29.5 4.3 22.75V9.25Z' fill='%230d9488'/><path d='M16 10.5l4.8 2.75v5.5L16 21.5l-4.8-2.75v-5.5Z' fill='none' stroke='white' stroke-width='2.2' stroke-linejoin='round'/></svg>">
+  <meta name="theme-color" content="#2b1d0e">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2.5 27.7 9.25v13.5L16 29.5 4.3 22.75V9.25Z' fill='%23f2a516'/><path d='M16 10.5l4.8 2.75v5.5L16 21.5l-4.8-2.75v-5.5Z' fill='none' stroke='%232b1d0e' stroke-width='2.2' stroke-linejoin='round'/></svg>">
   <link rel="stylesheet" href="./static/styles.css">
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
       <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M16 2.5 27.7 9.25v13.5L16 29.5 4.3 22.75V9.25Z" fill="#0d9488"/>
-        <path d="M16 10.5l4.8 2.75v5.5L16 21.5l-4.8-2.75v-5.5Z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>
+        <path d="M16 2.5 27.7 9.25v13.5L16 29.5 4.3 22.75V9.25Z" fill="#f2a516"/>
+        <path d="M16 10.5l4.8 2.75v5.5L16 21.5l-4.8-2.75v-5.5Z" fill="none" stroke="#2b1d0e" stroke-width="2.2" stroke-linejoin="round"/>
       </svg>
       <div>
         <h1>Colmena RPA</h1>
@@ -40,7 +41,14 @@
       <div class="panel-head">
         <h2>Obreras</h2>
         <span class="hint">Cada obrera es un bot en un servidor Windows o Linux. Si no reporta latido en 60 s se marca «Sin latido».</span>
+        <div class="hive-legend" aria-hidden="true">
+          <span><i class="cell-busy"></i>Trabajando</span>
+          <span><i class="cell-idle"></i>Libre</span>
+          <span><i class="cell-stop"></i>Deteniéndose</span>
+          <span><i class="cell-off"></i>Sin latido</span>
+        </div>
       </div>
+      <div class="hive" id="hive" aria-hidden="true"></div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Obrera</th><th>Salud</th><th>Estado</th><th>Plataforma</th><th>Procesos</th><th class="num">Exitosas</th><th class="num">Fallidas</th><th>Último latido</th></tr></thead>

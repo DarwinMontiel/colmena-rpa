@@ -120,7 +120,25 @@ function renderSummary(s) {
   $("k-bots-off").textContent = `${fmtNum(s.bots_offline)} sin latido`;
 }
 
+// Panal: una celda por obrera, coloreada por su estado. Es un resumen visual de la tabla.
+const CELL_CLASS = { BUSY: "cell-busy", IDLE: "cell-idle", STOPPING: "cell-stop" };
+
+function cellLabel(workerId) {
+  const m = /^srv-([a-z]+)-(\d+)-obrera-(\d+)$/i.exec(workerId);
+  return m ? `${m[1]}-${m[2]}<small>obrera ${m[3]}</small>` : esc(workerId.slice(-12));
+}
+
+function renderHive(bots) {
+  $("hive").innerHTML = bots
+    .map((b) => {
+      const cls = b.health === "OFFLINE" ? "cell-off" : CELL_CLASS[b.state] || "cell-idle";
+      return `<div class="cell ${cls}" title="${esc(b.worker_id)}">${cellLabel(b.worker_id)}</div>`;
+    })
+    .join("");
+}
+
 function renderBots(bots) {
+  renderHive(bots);
   $("bots-body").innerHTML = bots.length
     ? bots
         .map(
