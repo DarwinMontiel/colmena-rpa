@@ -218,6 +218,7 @@ NSSM.
 | `RPA_RETRY_DELAYS_SECONDS` | `10,60,300` | Espera entre intentos |
 | `RPA_HEARTBEAT_INTERVAL_SECONDS` | `15` | Frecuencia del latido |
 | `RPA_OFFLINE_AFTER_SECONDS` | `60` | Umbral para marcar una obrera «Sin latido» |
+| `COLMENA_PG_PUERTO` | `5432` | Puerto local del PostgreSQL de Docker Compose (úsalo si ya tienes un PostgreSQL en 5432) |
 | `RPA_REQUEUE_PENDING_AFTER_SECONDS` | `900` | Antigüedad mínima para reprocesar una tarea pendiente |
 | `RPA_PORTAL_URL` / `_USER` / `_PASSWORD` | demo | Aplicativo que opera el bot |
 

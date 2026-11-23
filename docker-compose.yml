@@ -35,7 +35,8 @@ services:
       POSTGRES_USER: rpa
       POSTGRES_PASSWORD: rpa
       POSTGRES_DB: rpa
-    ports: ["5432:5432"]
+    # Si ya tienes un PostgreSQL local en 5432: COLMENA_PG_PUERTO=5433 y ajusta RPA_DATABASE_URL.
+    ports: ["${COLMENA_PG_PUERTO:-5432}:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U rpa -d rpa"]
