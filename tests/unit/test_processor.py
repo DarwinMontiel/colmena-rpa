@@ -81,6 +81,8 @@ def test_duplicate_delivery_of_finished_task_is_skipped(make_processor, message)
     outcome = processor.handle(message)  # reentrega de RabbitMQ
 
     assert outcome.kind is OutcomeKind.ACK
+    assert outcome.duplicate
+    assert not outcome.succeeded
     assert len(bot.calls) == 1
 
 

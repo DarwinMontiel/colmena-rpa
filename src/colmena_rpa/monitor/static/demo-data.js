@@ -41,7 +41,7 @@ export function createDemoApi() {
     current_task_id: null,
     tasks_ok: 0,
     tasks_failed: 0,
-    version: "1.0.0",
+    version: "2.0.0",
     started_at: iso(now() - 6 * 3600e3),
     last_seen_ms: b.alive ? now() : now() - 47 * 60e3,
   }));

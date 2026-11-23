@@ -41,7 +41,9 @@ const fmt1 = (n) => n.toLocaleString("es-CO", { minimumFractionDigits: 1, maximu
 const fmtPct = (r) => (r == null ? "–" : `${fmt1(r * 100)} %`);
 const fmtSecs = (s) => (s == null ? "–" : s < 60 ? `${fmt1(s)} s` : `${fmt1(s / 60)} min`);
 const fmtTime = (iso) => (iso ? new Date(iso).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "medium" }) : "–");
-function fmtAgo(seconds) {
+function fmtAgo(raw) {
+  // Un reloj del servidor levemente adelantado no debe mostrar «hace -2 s».
+  const seconds = Math.max(0, raw);
   if (seconds < 60) return `hace ${Math.round(seconds)} s`;
   if (seconds < 3600) return `hace ${Math.round(seconds / 60)} min`;
   return `hace ${Math.round(seconds / 3600)} h`;

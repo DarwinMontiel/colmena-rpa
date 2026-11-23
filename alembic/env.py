@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from logging.config import fileConfig
+
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
@@ -7,6 +9,9 @@ from colmena_rpa.config import get_settings
 from colmena_rpa.persistence.tables import metadata
 
 config = context.config
+# Aplica la sección de logging de alembic.ini (sin ella, `alembic upgrade` no informa nada).
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
 target_metadata = metadata
 

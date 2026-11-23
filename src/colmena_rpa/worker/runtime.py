@@ -136,7 +136,9 @@ class Worker:
             message = TaskMessage.from_bytes(body)
         except ValidationError as exc:
             log.error("worker.invalid_message", error=str(exc)[:500])
-            self._threadsafe(functools.partial(channel.basic_reject, delivery_tag, requeue=False))
+            self._threadsafe(
+                channel, functools.partial(channel.basic_reject, delivery_tag, requeue=False)
+            )
             return
 
         self._heartbeat.busy(message.task_id)
@@ -151,11 +153,18 @@ class Worker:
             # Pausa breve para no entrar en un bucle caliente de reentregas mientras la
             # dependencia se recupera; luego se devuelve el mensaje a la cola.
             time.sleep(self.crash_backoff_seconds)
-            self._threadsafe(functools.partial(channel.basic_nack, delivery_tag, requeue=True))
+            self._threadsafe(
+                channel, functools.partial(channel.basic_nack, delivery_tag, requeue=True)
+            )
             return
-        final = {OutcomeKind.ACK: True, OutcomeKind.DEAD: False}.get(outcome.kind)
+        # Un duplicado omitido no es una tarea exitosa de esta obrera: no suma al contador.
+        final: bool | None = None
+        if not outcome.duplicate:
+            final = {OutcomeKind.ACK: True, OutcomeKind.DEAD: False}.get(outcome.kind)
         self._heartbeat.idle(final)
-        self._threadsafe(functools.partial(self._settle, channel, delivery_tag, message, outcome))
+        self._threadsafe(
+            channel, functools.partial(self._settle, channel, delivery_tag, message, outcome)
+        )
 
     def _settle(
         self, channel: Any, delivery_tag: int, message: TaskMessage, outcome: Outcome
@@ -168,5 +177,22 @@ class Worker:
             self._publisher.publish_dead(message, outcome.error or "error desconocido")
         channel.basic_ack(delivery_tag)
 
-    def _threadsafe(self, callback: Any) -> None:
-        self._connection.add_callback_threadsafe(callback)
+    def _threadsafe(self, channel: Any, callback: Any) -> None:
+        """Programa ``callback`` en el hilo de la conexión, solo si el canal sigue abierto.
+
+        Si la conexión se cayó mientras el bot trabajaba, el ``delivery_tag`` pertenece a un
+        canal muerto: confirmarlo lanzaría ``ChannelWrongStateError`` dentro de
+        ``start_consuming`` de la conexión nueva y detendría la obrera. El broker ya devolvió
+        ese mensaje a la cola; la reentrega se neutraliza con el reclamo atómico.
+        """
+
+        def guarded() -> None:
+            if not channel.is_open:
+                log.warning("worker.settle_skipped_channel_closed")
+                return
+            callback()
+
+        try:
+            self._connection.add_callback_threadsafe(guarded)
+        except Exception:
+            log.warning("worker.settle_skipped_connection_closed")

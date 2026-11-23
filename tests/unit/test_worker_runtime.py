@@ -17,8 +17,9 @@ from colmena_rpa.worker.runtime import Worker
 
 
 class FakeChannel:
-    def __init__(self) -> None:
+    def __init__(self, is_open: bool = True) -> None:
         self.calls: list[tuple[str, int, dict[str, Any]]] = []
+        self.is_open = is_open
 
     def basic_ack(self, delivery_tag: int) -> None:
         self.calls.append(("ack", delivery_tag, {}))
@@ -58,6 +59,16 @@ class CrashingProcessor:
 class AckProcessor:
     def handle(self, message: TaskMessage) -> Outcome:
         return Outcome(OutcomeKind.ACK)
+
+
+class DuplicateProcessor:
+    def handle(self, message: TaskMessage) -> Outcome:
+        return Outcome(OutcomeKind.ACK, duplicate=True)
+
+
+class ClosedConnection:
+    def add_callback_threadsafe(self, callback: Callable[[], None]) -> None:
+        raise RuntimeError("ConnectionWrongStateError: la conexión está cerrada")
 
 
 def _worker(settings: Settings, processor: Any, heartbeat: FakeHeartbeat) -> Worker:
@@ -113,6 +124,39 @@ def test_successful_outcome_is_acked(settings: Settings) -> None:
 
     assert channel.calls == [("ack", 9, {})]
     assert heartbeat.events[-1] == ("idle", True)
+
+
+def test_duplicate_is_acked_but_not_counted_as_success(settings: Settings) -> None:
+    heartbeat = FakeHeartbeat()
+    channel = FakeChannel()
+    worker = _worker(settings, DuplicateProcessor(), heartbeat)
+    worker._publisher = object()  # type: ignore[assignment]
+
+    worker._process(channel, 4, TaskMessage(process="scripted").to_bytes())
+
+    assert channel.calls == [("ack", 4, {})]
+    assert heartbeat.events[-1] == ("idle", None)
+
+
+def test_settle_on_channel_closed_by_reconnection_is_skipped(settings: Settings) -> None:
+    """El canal murió mientras el bot trabajaba: confirmar en él detendría la obrera."""
+    channel = FakeChannel(is_open=False)
+    worker = _worker(settings, AckProcessor(), FakeHeartbeat())
+    worker._publisher = object()  # type: ignore[assignment]
+
+    worker._process(channel, 5, TaskMessage(process="scripted").to_bytes())
+
+    assert channel.calls == []
+
+
+def test_settle_with_connection_closed_does_not_raise(settings: Settings) -> None:
+    channel = FakeChannel()
+    worker = _worker(settings, AckProcessor(), FakeHeartbeat())
+    worker._connection = ClosedConnection()
+
+    worker._process(channel, 6, TaskMessage(process="scripted").to_bytes())
+
+    assert channel.calls == []
 
 
 @pytest.mark.parametrize("failing", ["mark_running", "mark_done"])

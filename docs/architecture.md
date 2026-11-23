@@ -156,6 +156,7 @@ erDiagram
         varchar correlation_id "lote"
         varchar worker_id
         timestamptz created_at
+        timestamptz updated_at
         timestamptz started_at
         timestamptz finished_at
     }
@@ -177,6 +178,8 @@ erDiagram
         uuid current_task_id
         int tasks_ok
         int tasks_failed
+        varchar version
+        timestamptz started_at
         timestamptz last_seen
     }
 ```

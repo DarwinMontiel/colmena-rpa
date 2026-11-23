@@ -33,10 +33,12 @@ class Outcome:
     delay_seconds: int | None = None
     error: str | None = None
     output: dict[str, Any] = field(default_factory=dict)
+    #: Reentrega de una tarea ya terminada: se confirma sin ejecutar el bot.
+    duplicate: bool = False
 
     @property
     def succeeded(self) -> bool:
-        return self.kind is OutcomeKind.ACK and self.error is None
+        return self.kind is OutcomeKind.ACK and self.error is None and not self.duplicate
 
 
 def _describe(exc: BaseException) -> str:
@@ -65,7 +67,7 @@ class TaskProcessor:
         # duplicado), se confirma sin ejecutar el bot.
         if not self._repo.mark_running(message, self._worker_id):
             bound.info("task.duplicate_skipped")
-            return Outcome(OutcomeKind.ACK)
+            return Outcome(OutcomeKind.ACK, duplicate=True)
 
         ctx = BotContext(
             task_id=message.task_id,
